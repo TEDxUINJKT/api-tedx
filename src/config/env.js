@@ -7,9 +7,10 @@ const config = {
     "MAX_AGE_REFRESH_TOKEN": process.env.MAX_AGE_REFRESH_TOKEN,
     "REFRESH_TOKEN": process.env.REFRESH_TOKEN,
     "ACCESS_TOKEN": process.env.ACCESS_TOKEN,
-    "REDIRECT_URI": process.env.REDIRECT_URI,
-    "CLIENT_ID": process.env.CLIENT_ID,
-    "CLIENT_SECRET": process.env.CLIENT_SECRET,
+    "CLOUD_NAME": process.env.CLOUD_NAME,
+    "API_KEY": process.env.API_KEY,
+    "API_SECRET": process.env.API_SECRET,
+
 }
 
 module.exports = config

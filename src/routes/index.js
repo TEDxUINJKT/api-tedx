@@ -1,5 +1,8 @@
 const routes = require('express').Router()
 
+const user = require('./user')
+const event = require('./event')
+
 // Default
 routes.get('/', (req, res) => {
     res.json({
@@ -9,6 +12,9 @@ routes.get('/', (req, res) => {
 })
 
 // ---------------NEW ROUTES HERE------------------
+
+routes.use('/auth', user)
+routes.use('/event', event)
 
 // ------------------------------------------------
 
