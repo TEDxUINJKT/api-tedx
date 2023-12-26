@@ -7,6 +7,8 @@ const fileUpload = require('express-fileupload')
 
 const routes = require('./src/routes/index')
 
+const app = express();
+
 const dbConnection = require('./src/config/db.js')
 const config = require('./src/config/env.js')
 const path = require('path')
@@ -14,12 +16,10 @@ const path = require('path')
 // setup configuration
 const { PORT, MONGO_URL } = config
 
-const app = express()
-
 //middleware
 app.use('/public', express.static(path.join(__dirname, '/public')))
 
-//enable cors 
+//enable cors
 app.use(cors({
     credentials: true,
     origin: ['https://tedxuinjakarta.netlify.app', 'http://localhost:3000']
@@ -41,9 +41,7 @@ app.use(fileUpload({
     uploadTimeout: 60000
 }))
 
-//route render
-app.use(routes)
+app.use(routes);
 
-//success flagging
-app.listen(PORT, () => console.log(`SERVER RUNNING ON PORT : ${PORT}`))
 dbConnection(MONGO_URL)
+app.listen(PORT, () => console.log(`server running on port ${PORT}`))
