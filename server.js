@@ -22,7 +22,7 @@ app.use('/public', express.static(path.join(__dirname, '/public')))
 //enable cors
 app.use(cors({
     credentials: true,
-    origin: ['https://tedxuinjakarta.netlify.app', 'http://localhost:3000']
+    origin: ['https://tedxuinjakarta.netlify.app', 'http://localhost:3000','https://dashboard-tedxuinjakarta.vercel.app']
 }))
 
 app.use(helmet());
