@@ -254,7 +254,7 @@ const delete_event = async (req, res) => {
 
         const event = await Event.deleteOne({ _id: id })
 
-        if (event.deletedCount) {
+        if (!event.deletedCount) {
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
@@ -262,7 +262,7 @@ const delete_event = async (req, res) => {
             })
         } else {
             const ticket = await Ticket.deleteOne({ event_id: id })
-            if (ticket.deletedCount) {
+            if (!ticket.deletedCount) {
                 return res.status(403).json({
                     status: 403,
                     message: 'failed',
@@ -290,7 +290,7 @@ const delete_ticket = async (req, res) => {
     try {
         const data = await Ticket.deleteOne({ _id: id })
 
-        if (data.deletedCount) {
+        if (!data.deletedCount) {
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
@@ -312,15 +312,14 @@ const delete_ticket = async (req, res) => {
     }
 }
 
-
 // const name = async (req,res) => {
 //     try{
-//         res.status(200).json({
+//         return res.status(200).json({
 //             status: 200,
 //             message: "STATUS"
 //         })
 //     }catch(err){
-//         res.status(500).json({
+//         return res.status(500).json({
 //             status: 500,
 //             message: 'failed',
 //             info: 'server error'

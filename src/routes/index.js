@@ -2,6 +2,9 @@ const routes = require('express').Router()
 
 const user = require('./user')
 const event = require('./event')
+const speaker = require('./speaker')
+const partner = require('./partner')
+const content = require('./content')
 
 // Default
 routes.get('/', (req, res) => {
@@ -15,6 +18,9 @@ routes.get('/', (req, res) => {
 
 routes.use('/auth', user)
 routes.use('/event', event)
+routes.use('/speaker', speaker)
+routes.use('/partner', partner)
+routes.use('/content', content)
 
 // ------------------------------------------------
 

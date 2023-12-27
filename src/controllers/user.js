@@ -268,4 +268,19 @@ const user_list = async (req, res) => {
     }
 }
 
+// const name = async (req,res) => {
+//     try{
+//         return res.status(200).json({
+//             status: 200,
+//             message: "STATUS"
+//         })
+//     }catch(err){
+//         return res.status(500).json({
+//             status: 500,
+//             message: 'failed',
+//             info: 'server error'
+//         })
+//     }
+// }
+
 module.exports = { login, refresh, register, edit_user, delete_user, user_list }
