@@ -4,7 +4,7 @@ const controller = require("../controllers/user.js")
 
 // GET
 user.get('/refresh', islogin, controller.refresh)
-user.get('/users', islogin, controller.user_list)
+user.get('/users', sysadmin, controller.user_list)
 
 // POST
 user.post('/login', controller.login)
