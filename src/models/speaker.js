@@ -6,8 +6,8 @@ const speaker_scheme = new mongoose.Schema({
     version: String,
     type: {
         type: String,
-        enum: ['Student Speaker', 'Main Speaker'],
-        default: 'Student Speaker'
+        enum: ['student', 'main'],
+        default: 'student'
     },
     picture: {
         public_id: {
