@@ -8,8 +8,8 @@ const get_partners = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Succes Get [${type}] Partner`,
-            speaker: data
+            message: `Succes Get [${type}.0] Partner`,
+            partners: data
         })
     } catch (err) {
         return res.status(500).json({

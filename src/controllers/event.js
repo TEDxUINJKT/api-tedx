@@ -37,7 +37,7 @@ const get_detail_event = async (req, res) => {
             return res.status(200).json({
                 status: 200,
                 message: "Success Get Event Detail",
-                detail: event
+                detail: data
             })
         }
     } catch (err) {
