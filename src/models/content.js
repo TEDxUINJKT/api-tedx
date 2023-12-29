@@ -8,8 +8,8 @@ const content_scheme = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['Banner', 'Timeline', 'Teaser', 'Theme'],
-        default: 'Banner'
+        enum: ['banner', 'timeline', 'teaser', 'theme'],
+        default: 'banner'
     }
 })
 
