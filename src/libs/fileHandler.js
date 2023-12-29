@@ -4,8 +4,8 @@ const path = require("path");
 const cloudinary = require('../config/cloudinary.js')
 
 async function upload(file) {
-    const tempFilePath = path.join(`temp_${file.name}`) // Local
-    // const tempFilePath = path.join('/tmp', file.name) // Vercel
+    // const tempFilePath = path.join(`temp_${file.name}`) // Local
+    const tempFilePath = path.join('/tmp', file.name) // Vercel
     fs.writeFileSync(tempFilePath, file.data)
 
     const { secure_url: url_picture, public_id: url_public } = await cloudinary.uploader.upload(tempFilePath)
