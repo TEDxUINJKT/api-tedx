@@ -5,8 +5,8 @@ const partner_scheme = new mongoose.Schema({
     version: String,
     type: {
         type: String,
-        enum: ['Sponsor', 'Medpart'],
-        default: 'Sponsor'
+        enum: ['sponsor', 'medpart'],
+        default: 'sponsor'
     },
     logo: {
         public_id: {
