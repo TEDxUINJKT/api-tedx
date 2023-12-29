@@ -8,7 +8,7 @@ const get_content = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Succes Get [${type}] Content`,
+            message: `Succes Get [${version}].0 Content`,
             content: data
         })
     } catch (err) {

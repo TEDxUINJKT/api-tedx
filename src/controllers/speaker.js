@@ -8,7 +8,7 @@ const get_speakers = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Succes Get [${type}] Speaker`,
+            message: `Succes Get [${version}].0 Speaker`,
             speaker: data
         })
     } catch (err) {

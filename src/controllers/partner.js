@@ -8,7 +8,7 @@ const get_partners = async (req, res) => {
 
         return res.status(200).json({
             status: 200,
-            message: `Succes Get [${type}.0] Partner`,
+            message: `Succes Get [${version}.0] Partner`,
             partners: data
         })
     } catch (err) {
