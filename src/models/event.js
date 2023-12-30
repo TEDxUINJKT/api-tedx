@@ -9,8 +9,8 @@ const event_scheme = new mongoose.Schema({
     version: String,
     type: {
         type: String,
-        enum: ['Pre Event', 'Main Event'],
-        default: 'Pre Event'
+        enum: ['pre', 'main'],
+        default: 'pre'
     },
     thumbnail: {
         public_id: {
