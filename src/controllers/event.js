@@ -249,7 +249,7 @@ const delete_event = async (req, res) => {
     const { id } = req.params
     try {
         // Delete Existing Image
-        const existing = await EventfindOne({ _id: id }, { thumbnail: 1 })
+        const existing = await Event.findOne({ _id: id }, { thumbnail: 1 })
         destroy(existing.thumbnail.public_id)
 
         const event = await Event.deleteOne({ _id: id })
