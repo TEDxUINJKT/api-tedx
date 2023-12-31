@@ -261,19 +261,11 @@ const delete_event = async (req, res) => {
                 info: 'Cannot Delete Event'
             })
         } else {
-            const ticket = await Ticket.deleteOne({ event_id: id })
-            if (!ticket.deletedCount) {
-                return res.status(403).json({
-                    status: 403,
-                    message: 'failed',
-                    info: 'Cannot Delete Ticket on Event'
-                })
-            } else {
-                return res.status(200).json({
-                    status: 200,
-                    message: "Success Delete Event and Ticket"
-                })
-            }
+            await Ticket.deleteMany({ event_id: id })
+            return res.status(200).json({
+                status: 200,
+                message: "Success Delete Event and Ticket"
+            })
         }
     } catch (err) {
         return res.status(500).json({
