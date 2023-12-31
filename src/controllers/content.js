@@ -1,6 +1,26 @@
 const Content = require('../models/content.js')
 const { upload, destroy } = require('../libs/fileHandler.js')
 
+const get_version_content = async (req, res) => {
+    const { version } = req.params
+    try {
+        const data = await Content.find({ version })
+
+        return res.status(200).json({
+            status: 200,
+            message: `Succes Get [${version}].0 Content`,
+            contents: data
+        })
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
 const get_content = async (req, res) => {
     const { type, version } = req.params
     try {
@@ -22,7 +42,7 @@ const get_content = async (req, res) => {
 }
 
 const add_content = async (req, res) => {
-    const { data, version, type } = req.body
+    const { data = {}, version, type } = req.body
     try {
         const payload = {
             version,
@@ -44,6 +64,7 @@ const add_content = async (req, res) => {
         const existing = await Content.findOne({ version, type })
 
         if (existing) {
+            destroy(payload.data.image.public_id)
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
@@ -76,7 +97,7 @@ const add_content = async (req, res) => {
 }
 
 const update_content = async (req, res) => {
-    const { data, version, type } = req.body
+    const { data = {}, version, type } = req.body
     const { id } = req.params
     try {
         const payload = {
@@ -155,4 +176,4 @@ const delete_content = async (req, res) => {
     }
 }
 
-module.exports = { get_content, add_content, update_content, delete_content }
+module.exports = { get_version_content, get_content, add_content, update_content, delete_content }

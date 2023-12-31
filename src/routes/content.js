@@ -3,6 +3,7 @@ const { communication_role } = require("../middleware/privilege.js")
 const controller = require("../controllers/content.js")
 
 // GET
+content.get('/:version', controller.get_version_content)
 content.get('/:version/:type', controller.get_content)
 
 // POST
