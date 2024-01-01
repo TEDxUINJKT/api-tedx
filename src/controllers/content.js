@@ -140,7 +140,10 @@ const delete_content = async (req, res) => {
     try {
         // Delete Existing Image
         const existing = await Content.findOne({ _id: id }, { data: 1 })
-        destroy(existing.data.image.public_id)
+
+        if(existing.data.image?.public_id){
+            destroy(existing.data.image.public_id)
+        }
 
         const data = await Content.deleteOne({ _id: id })
 
