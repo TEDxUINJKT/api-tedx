@@ -61,30 +61,20 @@ const add_content = async (req, res) => {
             }
         }
 
-        const existing = await Content.findOne({ version, type })
 
-        if (existing) {
-            destroy(payload.data.image.public_id)
+        const content = await Content.create(payload)
+
+        if (!content) {
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
-                info: 'Data Already Added (Update-Only)'
+                info: 'Cannot Add New Content'
             })
         } else {
-            const content = await Content.create(payload)
-
-            if (!content) {
-                return res.status(403).json({
-                    status: 403,
-                    message: 'failed',
-                    info: 'Cannot Add New Content'
-                })
-            } else {
-                return res.status(200).json({
-                    status: 200,
-                    message: "Success Add New Content",
-                })
-            }
+            return res.status(200).json({
+                status: 200,
+                message: "Success Add New Content",
+            })
         }
     } catch (err) {
         return res.status(500).json({
