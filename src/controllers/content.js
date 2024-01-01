@@ -46,7 +46,7 @@ const add_content = async (req, res) => {
     try {
         const payload = {
             version,
-            data,
+            data: JSON.parse(data),
             type
         }
 
@@ -91,7 +91,7 @@ const update_content = async (req, res) => {
     const { id } = req.params
     try {
         const payload = {
-            data,
+            data: JSON.parse(data),
             version,
             type
         }
