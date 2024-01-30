@@ -46,7 +46,7 @@ const add_content = async (req, res) => {
     try {
         const payload = {
             version,
-            data,
+            data: JSON.parse(data),
             type
         }
 
@@ -87,13 +87,11 @@ const add_content = async (req, res) => {
 }
 
 const update_content = async (req, res) => {
-    const { data = {}, version, type } = req.body
+    const { data = {} } = req.body
     const { id } = req.params
     try {
         const payload = {
-            data,
-            version,
-            type
+            data: JSON.parse(data)
         }
 
         if (req.files) {
@@ -108,7 +106,9 @@ const update_content = async (req, res) => {
 
             // Delete Exisisting Image
             const existing = await Content.findOne({ _id: id }, { data: 1 })
-            destroy(existing.data.image.public_id)
+            if (existing.data.image) {
+                destroy(existing.data.image.public_id)
+            }
         }
 
         const content = await Content.updateOne({ _id: id }, payload)
