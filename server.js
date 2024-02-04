@@ -22,7 +22,8 @@ app.use('/public', express.static(path.join(__dirname, '/public')))
 //enable cors
 app.use(cors({
     credentials: true,
-    origin: "*"
+    // origin: "*"
+    origin: ['https://tedxuinjakarta.com','https://dashboard.tedxuinjakarta.com','https://tedxuinjakarta.vercel.app','https://dashboard-tedxuinjakarta.vercel.app','http://localhost:3000','http://localhost:3001']
     // origin: ['https://tedxuinjakarta.com','https://www.tedxuinjakarta.com', 'https://dashboard.tedxuinjakarta.com', 'https://tedxuinjakarta.vercel.app', 'http://localhost:3000', 'http://localhost:3001','https://dashboard-tedxuinjakarta.vercel.app']
 }))
 
