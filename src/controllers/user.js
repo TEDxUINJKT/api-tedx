@@ -177,6 +177,71 @@ const register = async (req, res) => {
     }
 }
 
+const register_guest = async (req, res) => {
+    const { password, display_name, username } = req.body
+
+    try {
+        //check duplicated username
+        const user = await User.findOne({ username });
+        if (user) {
+            return res.status(400).json({
+                status: 400,
+                message: 'failed',
+                info: 'username was used, try use another username'
+            });
+        } else {
+            const encrypted_password = await encrpyt_one_way(password)
+
+            // create user
+            const new_user = await User.create({
+                username,
+                display_name,
+                role: 'Guest',
+                password: encrypted_password
+            })
+
+            if (new_user) {
+                //generate access token and refresh token
+                const access_token = create_access_token(new_user._id, 'Guest');
+                const refresh_token = create_refresh_token(new_user._id, 'Guest')
+
+                //send cookie with contain refresh token
+                res.cookie("refreshToken", refresh_token, {
+                    expires: new Date(Date.now() + 1000 * 60 * 60 * 24), //one day
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "none"
+                })
+
+                return res.status(201).json({
+                    status: 201,
+                    message: 'success',
+                    id: new_user._id,
+                    username: new_user.username,
+                    display_name: new_user.display_name,
+                    profile_picture: new_user.profile_picture,
+                    role: 'Guest',
+                    access_token,
+                })
+
+            } else {
+                return res.status(400).json({
+                    status: 400,
+                    message: 'failed',
+                    info: 'failed to create an account'
+                })
+            }
+        }
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
 const edit_user = async (req, res) => {
     const { id } = req.params
     const { role = null, username = null, display_name = null, password = null } = req.body
@@ -283,4 +348,4 @@ const user_list = async (req, res) => {
 //     }
 // }
 
-module.exports = { login, refresh, register, edit_user, delete_user, user_list }
+module.exports = { login, refresh, register, edit_user, delete_user, user_list, register_guest }

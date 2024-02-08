@@ -5,6 +5,7 @@ const event = require('./event')
 const speaker = require('./speaker')
 const partner = require('./partner')
 const content = require('./content')
+const order = require('./order')
 
 // Default
 routes.get('/', (req, res) => {
@@ -21,6 +22,7 @@ routes.use('/event', event)
 routes.use('/speaker', speaker)
 routes.use('/partner', partner)
 routes.use('/content', content)
+routes.use('/order', order)
 
 // ------------------------------------------------
 

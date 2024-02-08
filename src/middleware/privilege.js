@@ -160,6 +160,46 @@ const sysadmin = (req, res, next) => {
     }
 }
 
+const guest = (req, res, next) => {
+    let access_token = req.headers.authorization
+    if (!access_token) {
+        return res.status(401).json({
+            status: 401,
+            message: 'failed',
+            info: 'no detected token'
+        });
+    }
+
+    try {
+        access_token = access_token.split(' ')[1];
+        verify_access_token(access_token, (error, decoded) => {
+            if (error) {
+                return res.status(401).json({
+                    status: 401,
+                    message: 'failed',
+                    info: 'expired token'
+                });
+            } else if (decoded.role.toLowerCase() !== 'guest') {
+                return res.status(401).json({
+                    status: 401,
+                    message: 'failed',
+                    info: 'access denied'
+                });
+            }
+            req.token = decoded
+            next()
+        })
+
+    } catch (error) {
+        console.log(error.message)
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error'
+        });
+    }
+}
+
 const islogin = (req, res, next) => {
     let access_token = req.headers.authorization
     if (!access_token) {
@@ -195,4 +235,4 @@ const islogin = (req, res, next) => {
     }
 }
 
-module.exports = { sysadmin, communication_role, partnership_role, event_role, islogin }
+module.exports = { sysadmin, communication_role, partnership_role, event_role, guest, islogin }

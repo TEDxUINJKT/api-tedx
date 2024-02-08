@@ -8,6 +8,7 @@ user.get('/users', sysadmin, controller.user_list)
 
 // POST
 user.post('/login', controller.login)
+user.post('/guest/register', controller.register_guest)
 user.post('/register', sysadmin, controller.register)
 
 // PATCH
