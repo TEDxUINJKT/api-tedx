@@ -2,6 +2,7 @@ const Order = require('../models/order.js')
 const Ticket = require('../models/ticket.js')
 const Event = require('../models/event.js')
 const crypto = require('crypto')
+const { verify_access_token } = require('../libs/jwt.js')
 
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
@@ -40,9 +41,8 @@ const get_order_list = async (req, res) => {
 const check_order = async (req, res) => {
     const { order_id } = req.params
     try {
-        console.log(order_id)
         const order = await Order.findOne({ _id: order_id })
-        console.log(order)
+
         if (order) {
             return res.status(200).json({
                 status: 200,
@@ -55,6 +55,52 @@ const check_order = async (req, res) => {
                 message: 'Order Data Not Found',
             })
         }
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
+const get_eticket = async (req, res) => {
+    const { order_id } = req.params
+    const { authorization: raw_token } = req.headers
+
+    const token = raw_token.split(' ')[1]
+
+    try {
+        verify_access_token(token, async (error, decoded) => {
+            if (error) {
+                return res.status(401).json({
+                    status: 401,
+                    message: 'failed',
+                    info: 'forbidden'
+                })
+            } else {
+                const order = await Order.findOne({ _id: order_id })
+
+                if (decoded.id === order.user_id) {
+                    const ticket = await Ticket.findOne({ _id: order.ticket_id })
+                    const event = await Event.findOne({ _id: ticket.event_id })
+
+                    return res.status(200).json({
+                        status: 200,
+                        message: "success get eticket data",
+                        data: { order, ticket, event }
+                    })
+                } else {
+                    return res.status(401).json({
+                        status: 401,
+                        message: 'failed',
+                        info: 'forbidden e-ticket access'
+                    })
+                }
+            }
+        })
+
     } catch (err) {
         return res.status(500).json({
             status: 500,
@@ -215,7 +261,7 @@ const delete_order = async (req, res) => {
 
 const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
     const hash = crypto.createHash('sha512').update(`${order_id}${body.status_code}${body.gross_amount}${MIDTRANS_SERVER_KEY}`).digest('hex')
-    console.log(hash)
+
     if (body.signature_key !== hash) {
         return {
             status: 'error',
@@ -362,11 +408,11 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
             await send_email(config)
-            responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
+            responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid' })
         }
     } else if (payment_status == 'settlement') {
         await send_email(config)
-        responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
+        responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid' })
     } else if (payment_status == 'cancel' ||
         payment_status == 'deny' ||
         payment_status == 'expire') {
@@ -377,6 +423,7 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
 
     return {
         status: 'success',
+        payment: payment_status,
         data: responseData
     }
 }
@@ -422,4 +469,4 @@ const handle_order = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_order_list, check_order, get_user_order_list, add_order, update_order, delete_order, handle_order }
+module.exports = { get_order_list, check_order, get_user_order_list, add_order, update_order, delete_order, handle_order, get_eticket }
