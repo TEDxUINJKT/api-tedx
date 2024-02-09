@@ -404,21 +404,27 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
 </html>`, // html body
     }
 
+    let status = 'Pending'
+
+
+
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
-            await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
+            status = 'Paid'
             await send_email(config)
         }
     } else if (payment_status == 'settlement') {
-        await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
+        status = 'Paid'
         await send_email(config)
     } else if (payment_status == 'cancel' ||
         payment_status == 'deny' ||
         payment_status == 'expire') {
-        await Order.updateOne({ _id: order_id }, { status: 'Failed' })
+        status = 'Failed'
     } else if (payment_status == 'pending') {
-        await Order.updateOne({ _id: order_id }, { status: 'Pending' })
+        status = 'Pending'
     }
+
+    await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
 
     return {
         status: 'success',
