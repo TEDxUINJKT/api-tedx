@@ -1,12 +1,18 @@
 const Order = require('../models/order.js')
+const crypto = require('crypto')
 
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
-const snapMidtrans = require('../config/midtrans')
+const midtransClient = require('midtrans-client');
 
 const {
     MIDTRANS_SERVER_KEY
 } = config
+
+const snapMidtrans = new midtransClient.Snap({
+    isProduction: false,
+    serverKey: MIDTRANS_SERVER_KEY
+});
 
 const get_order_list = async (req, res) => {
     const { ticket_id } = req.params
@@ -91,13 +97,15 @@ const add_order = async (req, res) => {
                 order_id: data._id.toString(),
                 gross_amount: total_price
             },
-            item_details: {
-                id: ticket_id,
-                name: event_name,
-                price: total_price,
-                quantity: 1,
-                user: user_id
-            },
+            item_details: [
+                {
+                    id: ticket_id,
+                    name: event_name.slice(0, 20),
+                    price: total_price,
+                    quantity: 1,
+                    user: user_id
+                }
+            ],
             customer_details: {
                 email,
                 first_name,
@@ -109,7 +117,6 @@ const add_order = async (req, res) => {
                 refferal_code: refferal
             }
         }
-
         snapMidtrans.createTransaction(midtrans_payload).then(async (midtrans_response) => {
             await Order.updateOne({ _id: data._id },
                 {
@@ -225,17 +232,17 @@ const updateStatusBaseOnMidtrans = async (order_id, data) => {
         to: ["azzamizzudinhasan@gmail.com"], // list of receivers
         subject: "E-Ticket Event Main Event TEDxUINJakarta", // Subject line
         text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>", // html body
+        html: "<b>INI TEST</b>", // html body
     }
 
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
-            send_email(config)
-            responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: payment_type })
+            await send_email(config)
+            responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: data.payment_type })
         }
     } else if (payment_status == 'settlement') {
-        send_email(config)
-        responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: payment_type })
+        await send_email(config)
+        responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: data.payment_type })
     } else if (payment_status == 'cancel' ||
         payment_status == 'deny' ||
         payment_status == 'expire') {
