@@ -271,7 +271,6 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
     const ticket = await Ticket.findOne({ _id: data.ticket_id })
     const event = await Event.findOne({ _id: ticket.event_id })
 
-    let responseData = null
     const payment_status = body.transaction_status
     const fraud_status = body.fraud_status
 
@@ -407,24 +406,23 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
 
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
+            await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
             await send_email(config)
-            responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid' })
         }
     } else if (payment_status == 'settlement') {
+        await Order.updateOne({ _id: order_id }, { status: 'Paid', payment_method: body.payment_type })
         await send_email(config)
-        responseData = await Order.updateOne({ _id: order_id }, { status: 'Paid' })
     } else if (payment_status == 'cancel' ||
         payment_status == 'deny' ||
         payment_status == 'expire') {
-        responseData = await Order.updateOne({ _id: order_id }, { status: 'Failed' })
+        await Order.updateOne({ _id: order_id }, { status: 'Failed' })
     } else if (payment_status == 'pending') {
-        responseData = await Order.updateOne({ _id: order_id }, { status: 'Pending' })
+        await Order.updateOne({ _id: order_id }, { status: 'Pending' })
     }
 
     return {
         status: 'success',
         payment: payment_status,
-        data: responseData
     }
 }
 
