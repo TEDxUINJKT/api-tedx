@@ -131,6 +131,40 @@ const get_user_order_list = async (req, res) => {
     }
 }
 
+const add_order_without_payment = async (req, res) => {
+    const { user_id, price, event_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { ticket_id } = req.params
+    try {
+        const payload = {
+            ticket_id, event_name, user_id, price, total_price, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+        }
+
+        const data = await Order.create(payload)
+
+        if (data) {
+            return res.status(200).json({
+                status: 200,
+                message: "Success Add New Order",
+                data
+            })
+        } else {
+            return res.status(500).json({
+                status: 500,
+                message: 'Midtrans Failed',
+                info: 'Cannot Add New Order {MIDTRANS}',
+                stack: err
+            })
+        }
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
 const add_order = async (req, res) => {
     const { user_id, price, event_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
     const { ticket_id } = req.params
@@ -200,12 +234,12 @@ const add_order = async (req, res) => {
 }
 
 const update_order = async (req, res) => {
-    const { price, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
+    const { price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
     const { order_id } = req.params
 
     try {
         const payload = {
-            price, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status
+            price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status
         }
 
         const data = await Order.updateOne({ _id: order_id }, payload)
@@ -473,4 +507,4 @@ const handle_order = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_order_list, check_order, get_user_order_list, add_order, update_order, delete_order, handle_order, get_eticket }
+module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket }

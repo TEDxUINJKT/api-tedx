@@ -9,6 +9,7 @@ const order_scheme = new mongoose.Schema({
     full_name: String,
     university: String,
     phone_number: String,
+    event_name: String,
     payment_method: {
         type: String,
         default: 'none'

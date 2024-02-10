@@ -14,6 +14,10 @@ const ticket_scheme = new mongoose.Schema({
         enum: ['Available', 'Sold Out'],
         default: 'Available'
     },
+    refferal: {
+        type: Array,
+        default: []
+    },
     created_at: {
         type: Date,
         default: new Date()

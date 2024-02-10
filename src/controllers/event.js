@@ -120,7 +120,7 @@ const add_event = async (req, res) => {
 
 const add_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, order_link, status } = req.body
+    const { type_ticket, description, price, order_link, status, refferal } = req.body
     try {
         const payload = {
             event_id: id,
@@ -128,7 +128,8 @@ const add_ticket = async (req, res) => {
             description,
             price,
             order_link,
-            status
+            status,
+            refferal
         }
 
         const data = await Ticket.create(payload)
@@ -211,14 +212,15 @@ const update_event = async (req, res) => {
 
 const update_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, order_link, status } = req.body
+    const { type_ticket, description, price, order_link, status, refferal } = req.body
     try {
         let payload = {
             type_ticket,
             description,
             price,
             order_link,
-            status
+            status,
+            refferal
         }
 
         const data = await Ticket.updateOne({ _id: id }, payload)
