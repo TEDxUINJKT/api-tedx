@@ -293,20 +293,9 @@ const delete_order = async (req, res) => {
     }
 }
 
-const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
-    const hash = crypto.createHash('sha512').update(`${order_id}${body.status_code}${body.gross_amount}${MIDTRANS_SERVER_KEY}`).digest('hex')
-
-    if (body.signature_key !== hash) {
-        return {
-            status: 'error',
-            message: 'Invalid Signature Key'
-        }
-    }
+const sendEmail = async (order_id, body, data) => {
     const ticket = await Ticket.findOne({ _id: data.ticket_id })
     const event = await Event.findOne({ _id: ticket.event_id })
-
-    const payment_status = body.transaction_status
-    const fraud_status = body.fraud_status
 
     const config = {
         from: {
@@ -438,46 +427,57 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
 </html>`, // html body
     }
 
-    let status = 'Pending'
-
-    if (payment_status == 'capture') {
-        if (fraud_status == 'accept') {
-            status = 'Paid'
-            await send_email(config)
-        }
-    } else if (payment_status == 'settlement') {
-        status = 'Paid'
-        await send_email(config)
-    } else if (payment_status == 'cancel' ||
-        payment_status == 'deny' ||
-        payment_status == 'expire') {
-        status = 'Failed'
-    } else if (payment_status == 'pending') {
-        status = 'Pending'
-    }
-
-    await Order.updateOne({ _id: order_id }, { status: status, payment_method: body.payment_type })
+    await send_email(config)
 
     return {
-        status: 'success',
-        payment: payment_status,
+        status: 'success'
+    }
+}
+
+const checkHash = async (body) => {
+    const hash = crypto.createHash('sha512').update(`${body.order_id}${body.status_code}${body.gross_amount}${MIDTRANS_SERVER_KEY}`).digest('hex')
+
+    if (body.signature_key !== hash) {
+        return {
+            status: 'error',
+            message: 'Invalid Signature Key'
+        }
+    } else {
+        return {
+            status: 'success',
+            message: 'Valid Signature Key'
+        }
     }
 }
 
 const handle_order = async (req, res) => {
     const body = req.body
     try {
+        checkHash(body)
+
         const data = await Order.findOne({ _id: body.order_id })
 
-        if (data) {
-            updateStatusBaseOnMidtrans(body.order_id, body, data).then(result => console.log(result))
+        const payment_status = body.transaction_status
+        const fraud_status = body.fraud_status
+
+        if (payment_status == 'capture') {
+            if (fraud_status == 'accept') {
+                await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
+                sendEmail(body.order_id, body, data).then(result => console.log(result))
+            }
+        } else if (payment_status == 'settlement') {
+            await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
+            sendEmail(body.order_id, body, data).then(result => console.log(result))
+        } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
+            await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
+        } else if (payment_status == 'pending') {
+            await Order.updateOne({ _id: body.order_id }, { status: 'Pending', payment_method: body.payment_type })
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             status: 'success',
             message: 'OK',
         })
-
 
     } catch (err) {
         return res.status(500).json({
