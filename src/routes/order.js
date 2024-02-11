@@ -10,8 +10,8 @@ order.get('/e-ticket/:order_id', guest, controller.get_eticket)
 
 
 // POST
-order.post('/:ticket_id', controller.add_order_without_payment)
-order.post('/db/:ticket_id', event_role, controller.add_order)
+order.post('/:ticket_id', controller.add_order)
+order.post('/db/:ticket_id', event_role, controller.add_order_without_payment)
 order.post('/wb/midtrans', controller.handle_order)
 
 // PATCH

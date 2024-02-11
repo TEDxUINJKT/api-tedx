@@ -14,7 +14,7 @@ const {
 } = config
 
 const snapMidtrans = new midtransClient.Snap({
-    isProduction: false,
+    isProduction: true,
     serverKey: MIDTRANS_SERVER_KEY
 });
 
