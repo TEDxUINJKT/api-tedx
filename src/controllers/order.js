@@ -19,15 +19,40 @@ const snapMidtrans = new midtransClient.Snap({
 });
 
 const get_order_list = async (req, res) => {
-    const { ticket_id } = req.params
+    const { event_id } = req.params
     try {
-        const orders = await Order.find({ ticket_id })
+        const tickets = await Ticket.find({ event_id })
+        let order_list = []
 
-        return res.status(200).json({
-            status: 200,
-            message: 'Success Get Order List',
-            data: orders
-        })
+        if (tickets.length > 0) {
+            const ticket_list = tickets.map(each => each._id)
+            await Promise.all(ticket_list.map(async (each) => {
+                const orders = await Order.find({ ticket_id: each })
+
+                order_list = [...order_list, ...orders]
+            }))
+
+            if (order_list.length > 0) {
+                return res.status(200).json({
+                    status: 200,
+                    message: 'Success Get Order List',
+                    data: order_list
+                })
+            } else {
+                return res.status(200).json({
+                    status: 200,
+                    message: 'Data Not Found',
+                    data: []
+                })
+            }
+        } else {
+            return res.status(200).json({
+                status: 200,
+                message: 'Data Not Found',
+                data: []
+            })
+        }
+
     } catch (err) {
         return res.status(500).json({
             status: 500,
@@ -248,12 +273,42 @@ const update_order = async (req, res) => {
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
-                info: 'Cannot Add Update Order'
+                info: 'Cannot Update Order'
             })
         } else {
             return res.status(200).json({
                 status: 200,
-                message: "Success Add Update Order",
+                message: "Success Update Order",
+            })
+        }
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
+const attend_guest = async (req, res) => {
+    const { order_id } = req.params
+
+    try {
+        const payload = { is_attend: true }
+
+        const data = await Order.updateOne({ _id: order_id }, payload)
+
+        if (!data) {
+            return res.status(403).json({
+                status: 403,
+                message: 'failed',
+                info: 'Cannot Change Status Guest'
+            })
+        } else {
+            return res.status(200).json({
+                status: 200,
+                message: "Guest is Attended",
             })
         }
     } catch (err) {
@@ -505,4 +560,4 @@ const handle_order = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket }
+module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, attend_guest, delete_order, handle_order, get_eticket }

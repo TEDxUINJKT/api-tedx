@@ -24,8 +24,12 @@ const order_scheme = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Unpaid', 'Paid', 'Attended', 'Failed', 'Canceled', 'Pending'],
+        enum: ['Unpaid', 'Paid', 'Failed', 'Pending', 'Special'],
         default: 'Unpaid'
+    },
+    is_attend: {
+        type: Boolean,
+        default: false
     },
     is_refferal: {
         type: Boolean,
