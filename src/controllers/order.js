@@ -474,7 +474,7 @@ const handle_order = async (req, res) => {
             await Order.updateOne({ _id: body.order_id }, { status: 'Pending', payment_method: body.payment_type })
         }
 
-        return res.status(200).json({
+        res.status(200).json({
             status: 'success',
             message: 'OK',
         })
