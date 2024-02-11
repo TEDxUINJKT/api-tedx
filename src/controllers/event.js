@@ -120,14 +120,13 @@ const add_event = async (req, res) => {
 
 const add_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, order_link, status, refferal } = req.body
+    const { type_ticket, description, price, status, refferal } = req.body
     try {
         const payload = {
             event_id: id,
             type_ticket,
             description,
             price,
-            order_link,
             status,
             refferal
         }
@@ -212,13 +211,12 @@ const update_event = async (req, res) => {
 
 const update_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, order_link, status, refferal } = req.body
+    const { type_ticket, description, price, status, refferal } = req.body
     try {
         let payload = {
             type_ticket,
             description,
             price,
-            order_link,
             status,
             refferal
         }

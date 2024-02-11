@@ -5,10 +5,6 @@ const ticket_scheme = new mongoose.Schema({
     type_ticket: String,
     description: String,
     price: Number,
-    order_link: {
-        type: String,
-        default: 'https://google.com'
-    },
     status: {
         type: String,
         enum: ['Available', 'Sold Out'],
