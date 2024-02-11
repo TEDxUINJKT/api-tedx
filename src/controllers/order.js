@@ -157,14 +157,16 @@ const get_user_order_list = async (req, res) => {
 }
 
 const add_order_without_payment = async (req, res) => {
-    const { user_id, price, event_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id, event_name, email, first_name, last_name, university, phone_number } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, event_name, user_id, price, total_price, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id, event_name, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Special'
         }
 
         const data = await Order.create(payload)
+
+        await sendEmail(data._id, { gross_amount: total_price }, payload)
 
         if (data) {
             return res.status(200).json({
