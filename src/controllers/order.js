@@ -440,8 +440,6 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
 
     let status = 'Pending'
 
-
-
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
             status = 'Paid'
@@ -471,13 +469,15 @@ const handle_order = async (req, res) => {
     try {
         const data = await Order.findOne({ _id: body.order_id })
 
+        let response = null
         if (data) {
-            updateStatusBaseOnMidtrans(body.order_id, body, data).then(result => console.log(result))
+            await updateStatusBaseOnMidtrans(body.order_id, body, data).then(result => response = result)
         }
 
         res.status(200).json({
             status: 'success',
-            message: 'OK'
+            message: 'OK',
+            server_status: result.payment
         })
 
 
