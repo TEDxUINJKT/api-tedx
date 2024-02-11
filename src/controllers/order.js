@@ -443,11 +443,11 @@ const updateStatusBaseOnMidtrans = async (order_id, body, data) => {
     if (payment_status == 'capture') {
         if (fraud_status == 'accept') {
             status = 'Paid'
-            await send_email(config)
+            send_email(config)
         }
     } else if (payment_status == 'settlement') {
         status = 'Paid'
-        await send_email(config)
+        send_email(config)
     } else if (payment_status == 'cancel' ||
         payment_status == 'deny' ||
         payment_status == 'expire') {
@@ -470,7 +470,7 @@ const handle_order = async (req, res) => {
         const data = await Order.findOne({ _id: body.order_id })
 
         if (data) {
-            updateStatusBaseOnMidtrans(body.order_id, body, data).then(result => console.log(result))
+            await updateStatusBaseOnMidtrans(body.order_id, body, data).then(result => console.log(result))
         }
 
         res.status(200).json({
