@@ -333,6 +333,33 @@ const user_list = async (req, res) => {
     }
 }
 
+const guest_list = async (req, res) => {
+    try {
+        const users = await User.find({ role: 'Guest' }, { _id: 1, username: 1, display_name: 1, role: 1 })
+
+        if (users.length > 0 && users !== null) {
+            return res.status(200).json({
+                status: 200,
+                data: users
+            })
+        } else {
+            return res.status(200).json({
+                status: 200,
+                data: [],
+                message: 'No User Found',
+            })
+        }
+
+    } catch (error) {
+        return res.status(404).json({
+            status: 404,
+            message: 'failed',
+            info: 'Server Error',
+            stack: err
+        })
+    }
+}
+
 // const name = async (req,res) => {
 //     try{
 //         return res.status(200).json({
@@ -348,4 +375,4 @@ const user_list = async (req, res) => {
 //     }
 // }
 
-module.exports = { login, refresh, register, edit_user, delete_user, user_list, register_guest }
+module.exports = { login, refresh, register, edit_user, delete_user, user_list, register_guest, guest_list }
