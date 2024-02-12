@@ -25,11 +25,17 @@ const get_order_list = async (req, res) => {
         let order_list = []
 
         if (tickets.length > 0) {
-            const ticket_list = tickets.map(each => each._id)
-            await Promise.all(ticket_list.map(async (each) => {
-                const orders = await Order.find({ ticket_id: each })
+            const ticket_list = tickets.map(ticket => { return { id: ticket._id, type: ticket.type_ticket } })
 
-                order_list = [...order_list, ...orders]
+            await Promise.all(ticket_list.map(async (ticket) => {
+                const orders = await Order.find({ ticket_id: ticket.id })
+
+                orders.forEach(order => {
+                    const returned = JSON.stringify(order)
+                    let parsed = JSON.parse(returned)
+                    parsed.type = ticket.type
+                    order_list.push(parsed)
+                })
             }))
 
             if (order_list.length > 0) {
