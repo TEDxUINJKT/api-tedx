@@ -3,13 +3,27 @@ const mongoose = require('mongoose')
 const order_scheme = new mongoose.Schema({
     ticket_id: String,
     user_id: String,
-    price: Number,
+    guest_data:{
+        type:Array,
+        default:[
+            {
+                price:0,
+                email:'',
+                full_name:'',
+                first_name:'',
+                last_name:'',
+                university:'',
+                phone_number:''
+            }
+        ]
+    },
     total_price: Number,
-    email: String,
-    full_name: String,
-    university: String,
-    phone_number: String,
+    ticket_type:String,
     event_name: String,
+    quantity:{
+        type:Number,
+        default:1
+    },
     payment_method: {
         type: String,
         default: 'none'

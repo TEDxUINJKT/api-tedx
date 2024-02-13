@@ -22,35 +22,13 @@ const get_order_list = async (req, res) => {
     const { event_id } = req.params
     try {
         const tickets = await Ticket.find({ event_id })
-        let order_list = []
 
         if (tickets.length > 0) {
-            const ticket_list = tickets.map(ticket => { return { id: ticket._id, type: ticket.type_ticket } })
-
-            await Promise.all(ticket_list.map(async (ticket) => {
-                const orders = await Order.find({ ticket_id: ticket.id })
-
-                orders.forEach(order => {
-                    const returned = JSON.stringify(order)
-                    let parsed = JSON.parse(returned)
-                    parsed.type = ticket.type
-                    order_list.push(parsed)
-                })
-            }))
-
-            if (order_list.length > 0) {
-                return res.status(200).json({
-                    status: 200,
-                    message: 'Success Get Order List',
-                    data: order_list
-                })
-            } else {
-                return res.status(200).json({
-                    status: 200,
-                    message: 'Data Not Found',
-                    data: []
-                })
-            }
+            return res.status(200).json({
+                status: 200,
+                message: 'Success Get Order List',
+                data: tickets
+            })
         } else {
             return res.status(200).json({
                 status: 200,
@@ -199,11 +177,11 @@ const add_order_without_payment = async (req, res) => {
 }
 
 const add_order = async (req, res) => {
-    const { user_id, price, event_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id,ticket_type, guest_data,quantity, event_name, total_price,  is_refferal, refferal } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, user_id, price, total_price, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id,ticket_type,quantity, user_id, total_price, guest_data, is_refferal, refferal
         }
 
         const data = await Order.create(payload)
@@ -223,10 +201,10 @@ const add_order = async (req, res) => {
                 }
             ],
             customer_details: {
-                email,
-                first_name,
-                last_name,
-                phone: phone_number
+                email:guest_data[0].email,
+                first_name:guest_data[0].first_name,
+                last_name:guest_data[0].last_name,
+                phone: guest_data[0].phone_number
             },
             additional: {
                 is_refferal,
@@ -267,12 +245,12 @@ const add_order = async (req, res) => {
 }
 
 const update_order = async (req, res) => {
-    const { price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
+    const { user_id,ticket_type, guest_data,quantity, event_name, total_price,  is_refferal, refferal } = req.body
     const { order_id } = req.params
 
     try {
         const payload = {
-            price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status
+            ticket_id,ticket_type,quantity, user_id, total_price, guest_data, is_refferal, refferal
         }
 
         const data = await Order.updateOne({ _id: order_id }, payload)
@@ -457,18 +435,19 @@ const sendEmail = async (order_id, body, data) => {
             <img src="https://res.cloudinary.com/dnbtkwgwz/image/upload/v1707485076/idvp4ypfne3kc3809cew.png" />
         </div>
         <div class="content">
-            <div class="ticket">
+            ${data.guest_data.map(each => (
+            `<div class="ticket">
                 <p>Thank you for being part of TEDx UIN Jakarta 2.0. Your ticket purchase has been successful, below
                     are
                     the details of the ticket.</p>
                 <p><strong>Order ID:</strong> ${order_id}</p>
-                <p><strong>Guest:</strong> ${data.full_name}</p>
+                <p><strong>Guest:</strong> ${each.full_name}</p>
                 <p><strong>Event:</strong> ${event.event}</p>
                 <p><strong>Date:</strong> ${event.date}</p>
                 <p><strong>Location:</strong> ${event.place}</p>
                 <p><strong>Price:</strong> IDR ${body.gross_amount}</p>
-
-            </div>
+            </div>`
+            ))}
             <div class="cta">
                 <a href="${FRONT_END_URL_PROD}/e-ticket/${order_id}" target="_blank">
                     <button>Check E-Ticket</button>

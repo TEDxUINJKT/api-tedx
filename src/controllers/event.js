@@ -71,7 +71,7 @@ const get_ticket_list = async (req, res) => {
 }
 
 const add_event = async (req, res) => {
-    const { event, description, date, time, place, version, type } = req.body
+    const { event, description, date,time, place, version, type } = req.body
     try {
         let payload = {
             event,
@@ -120,12 +120,13 @@ const add_event = async (req, res) => {
 
 const add_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, status, refferal } = req.body
+    const { type_ticket,bundle_status, quota, description, price, status, refferal } = req.body
     try {
         const payload = {
             event_id: id,
             type_ticket,
             description,
+            quota,
             price,
             status,
             refferal
@@ -211,12 +212,13 @@ const update_event = async (req, res) => {
 
 const update_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, status, refferal } = req.body
+    const { type_ticket, description,bundle_status, price,quota, status, refferal } = req.body
     try {
         let payload = {
             type_ticket,
             description,
             price,
+            quota,
             status,
             refferal
         }
