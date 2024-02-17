@@ -22,35 +22,13 @@ const get_order_list = async (req, res) => {
     const { event_id } = req.params
     try {
         const tickets = await Ticket.find({ event_id })
-        let order_list = []
 
         if (tickets.length > 0) {
-            const ticket_list = tickets.map(ticket => { return { id: ticket._id, type: ticket.type_ticket } })
-
-            await Promise.all(ticket_list.map(async (ticket) => {
-                const orders = await Order.find({ ticket_id: ticket.id })
-
-                orders.forEach(order => {
-                    const returned = JSON.stringify(order)
-                    let parsed = JSON.parse(returned)
-                    parsed.type = ticket.type
-                    order_list.push(parsed)
-                })
-            }))
-
-            if (order_list.length > 0) {
-                return res.status(200).json({
-                    status: 200,
-                    message: 'Success Get Order List',
-                    data: order_list
-                })
-            } else {
-                return res.status(200).json({
-                    status: 200,
-                    message: 'Data Not Found',
-                    data: []
-                })
-            }
+            return res.status(200).json({
+                status: 200,
+                message: 'Success Get Order List',
+                data: tickets
+            })
         } else {
             return res.status(200).json({
                 status: 200,
@@ -167,7 +145,7 @@ const add_order_without_payment = async (req, res) => {
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, event_name, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Special'
+            ticket_id,total_guest:1, quantity:1,event_name,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
         const data = await Order.create(payload)
@@ -199,11 +177,11 @@ const add_order_without_payment = async (req, res) => {
 }
 
 const add_order = async (req, res) => {
-    const { user_id, price, event_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id, price,total_guest, event_name,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, user_id, price, total_price, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id, user_id,total_guest,event_name, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
         }
 
         const data = await Order.create(payload)
@@ -216,7 +194,7 @@ const add_order = async (req, res) => {
             item_details: [
                 {
                     id: ticket_id,
-                    name: event_name.slice(0, 20),
+                    name: `${ticket_name} Ticket`,
                     price: total_price,
                     quantity: 1,
                     user: user_id
@@ -267,12 +245,12 @@ const add_order = async (req, res) => {
 }
 
 const update_order = async (req, res) => {
-    const { price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
+    const { quantity,ticket_name,  email, first_name, last_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
     const { order_id } = req.params
 
     try {
         const payload = {
-            price, event_name, total_price, email, full_name, university, phone_number, payment_method, is_refferal, refferal, status
+            email,quantity,ticket_name, full_name: `${first_name} ${last_name}`, university, phone_number, payment_method, is_refferal, refferal, status
         }
 
         const data = await Order.updateOne({ _id: order_id }, payload)
@@ -489,8 +467,11 @@ const sendEmail = async (order_id, body, data) => {
 
 </html>`, // html body
     }
+    const res = await send_email(config)
 
-    await send_email(config)
+    if(res.includes('OK')){
+        await Order.updateOne({_id:order_id},{sended_email:true})
+    }
 
     return {
         status: 'success'

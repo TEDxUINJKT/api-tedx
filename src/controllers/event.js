@@ -50,6 +50,39 @@ const get_detail_event = async (req, res) => {
     }
 }
 
+const get_ticket_detail = async (req, res) => {
+    const { id } = req.params
+    try {
+        const ticket = await Ticket.findOne({ _id: id })
+
+        if (!ticket) {
+            return res.status(403).json({
+                status: 403,
+                message: 'failed',
+                info: 'Cannot Find Ticket'
+            })
+        } else {
+            const event = await Event.findOne({_id:ticket.event_id})
+
+            return res.status(200).json({
+                status: 200,
+                message: "Success Get Ticket Detail",
+                detail: {
+                    ticket,
+                    event
+                }
+            })
+        }
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
 const get_ticket_list = async (req, res) => {
     const { id } = req.params
     try {
@@ -120,12 +153,15 @@ const add_event = async (req, res) => {
 
 const add_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, status, refferal } = req.body
+    const { type_ticket,bundle_status,quota,is_publish, description, price, status, refferal } = req.body
     try {
         const payload = {
             event_id: id,
             type_ticket,
             description,
+            bundle_status,
+            quota,
+            is_publish,
             price,
             status,
             refferal
@@ -211,11 +247,14 @@ const update_event = async (req, res) => {
 
 const update_ticket = async (req, res) => {
     const { id } = req.params
-    const { type_ticket, description, price, status, refferal } = req.body
+    const { type_ticket,bundle_status,quota, is_publish,description, price, status, refferal } = req.body
     try {
         let payload = {
             type_ticket,
             description,
+            bundle_status,
+            quota,
+            is_publish,
             price,
             status,
             refferal
@@ -319,4 +358,4 @@ const delete_ticket = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_event, get_detail_event, get_ticket_list, add_event, add_ticket, update_event, update_ticket, delete_event, delete_ticket }
+module.exports = { get_event, get_detail_event,get_ticket_detail, get_ticket_list, add_event, add_ticket, update_event, update_ticket, delete_event, delete_ticket }

@@ -10,6 +10,16 @@ const order_scheme = new mongoose.Schema({
     university: String,
     phone_number: String,
     event_name: String,
+    ticket_type:String,
+    quantity:Number,
+    sended_email:{
+        type:Boolean,
+        default:false
+    },
+    total_guest:{
+        type:Number,
+        default:1
+    },
     payment_method: {
         type: String,
         default: 'none'
@@ -24,12 +34,16 @@ const order_scheme = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Unpaid', 'Paid', 'Failed', 'Pending', 'Special'],
+        enum: ['Unpaid', 'Paid', 'Failed', 'Pending'],
         default: 'Unpaid'
     },
-    is_attend: {
-        type: Boolean,
-        default: false
+    attend_status: {
+        type: Object,
+        default: {
+            total_guest:1,
+            attended_guest:0,
+            is_attend:false
+        }
     },
     is_refferal: {
         type: Boolean,

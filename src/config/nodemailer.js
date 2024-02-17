@@ -19,8 +19,9 @@ const transporter = nodemailer.createTransport({
 
 const send_email = async (config) => {
     try {
-        await transporter.sendMail(config)
-    } catch (err) {
+        const {response} = await transporter.sendMail(config)
+        return response    
+} catch (err) {
         console.log(err)
     }
 }
