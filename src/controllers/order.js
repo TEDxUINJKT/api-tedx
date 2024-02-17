@@ -345,127 +345,131 @@ const sendEmail = async (order_id, body, data) => {
         }, // sender address
         to: [data.email], // list of receivers
         subject: "E-Ticket TEDxUINJakarta", // Subject line
-        html: `
-        <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Ticket</title>
-    <style>
-        body {
-            font-family: Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px 10px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            background-color: #fff;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-        }
-
-        .ticket {
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .ticket h2 {
-            color: #eb0028;
-            margin-top: 0;
-        }
-
-        p a {
-            color: #eb0028;
-        }
-
-        .ticket p {
-            margin-top: 5px;
-        }
-
-        .cta {
-            width: 100%;
-        }
-
-        .cta a {
-            width: fit-content;
-            margin: auto;
-            display: block;
-        }
-
-        .cta button {
-            background-color: #eb0028;
-            border: none;
-            padding: 14px 32px;
-            color: white;
-            font-size: 1.1em;
-            border-radius: 50px;
-        }
-
-        .footer {
-            background-color: #eb0028;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <div class="header">
-            <img src="https://res.cloudinary.com/dnbtkwgwz/image/upload/v1707485076/idvp4ypfne3kc3809cew.png" />
-        </div>
-        <div class="content">
-            <div class="ticket">
-                <p>Thank you for being part of TEDx UIN Jakarta 2.0. Your ticket purchase has been successful, below
-                    are
-                    the details of the ticket.</p>
-                <p><strong>Order ID:</strong> ${order_id}</p>
-                <p><strong>Guest:</strong> ${data.full_name}</p>
-                <p><strong>Event:</strong> ${event.event}</p>
-                <p><strong>Date:</strong> ${event.date}</p>
-                <p><strong>Location:</strong> ${event.place}</p>
-                <p><strong>Price:</strong> IDR ${body.gross_amount}</p>
-
+        html: `<!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>E-Ticket</title>
+            <style>
+                body {
+                    font-family: Roboto, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                }
+        
+                .container {
+                    max-width: 600px;
+                    margin: 20px auto;
+                    background-color: #fff;
+                    padding: 20px 10px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                }
+        
+                .header,.footer {
+                    background-color: #fff;
+                    color: #fff;
+                    padding: 10px;
+                    text-align: center;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                }
+        
+                .header img{
+                    width: 100%;
+                    height: auto;
+                }
+                .footer img{
+                    width: 40%;
+                    height: auto;
+                }
+        
+                .ticket {
+                    background-color: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                }
+        
+                .ticket h2 {
+                    color: #eb0028;
+                    margin-top: 0;
+                }
+        
+                p a {
+                    color: #eb0028;
+                }
+        
+                .ticket p {
+                    margin-top: 5px;
+                    text-align: justify;
+                    line-height: 1.5em;
+                }
+        
+                .cta {
+                    width: 100%;
+                    margin: 50px 0;
+                }
+        
+                .cta a {
+                    width: fit-content;
+                    margin: auto;
+                    display: block;
+                }
+        
+                .cta button {
+                    background-color: #eb0028;
+                    border: none;
+                    padding: 14px 52px;
+                    color: white;
+                    font-size: 1em;
+                    border-radius: 20px;
+                }
+            </style>
+        </head>
+        
+        <body>
+            <div class="container">
+                <div class="header">
+                    <img src="https://res.cloudinary.com/dnbtkwgwz/image/upload/v1708162393/rqoavfbiwaiktstjdjfh.png">
+                </div>
+                <div class="content">
+                    <div class="ticket">
+                        <p>Halo ${data.full_name},</p>
+                        <p><b>Payment Success: Ticket Confirmed! 🎫</b></p>
+                        <p>Yeayy! Ticket payment has been made successfully! Now it's time to grab your tickets and get ready for an unforgettable experience!</p>
+                        <p>Click the button below to instantly access your tickets:</p>
+                        <!-- <p><strong>Order ID:</strong> ${order_id}</p>
+                        <p><strong>Guest:</strong> ${data.full_name}</p>
+                        <p><strong>Event:</strong> ${event.event}</p>
+                        <p><strong>Date:</strong> ${event.date}</p>
+                        <p><strong>Location:</strong> ${event.place}</p>
+                        <p><strong>Price:</strong> IDR ${body.gross_amount}</p> -->
+                        <div class="cta">
+                            <a href="${FRONT_END_URL_PROD}/e-ticket/${order_id}" target="_blank">
+                                <button>Ticket</button>
+                            </a>
+                        </div>
+                        <p>Make sure you prepare with passion and enthusiasm. If you have any questions or need any assistance, please do not hesitate to <a
+                            href="https://wa.me/6281210696745" target="_blank">contact
+                            us</a>.</p>
+                        <p>Thank you, we hope you enjoy every moment of this event ✨✨
+                            Hope to see you there!</p>
+                        <br>
+                        <br>
+                        <p><b>TEDxUINJakarta</b></p>
+                    </div>            
+                </div>
+                <div class="footer">
+                    <img src="https://res.cloudinary.com/dnbtkwgwz/image/upload/v1707485076/idvp4ypfne3kc3809cew.png" />
+                </div>
             </div>
-            <div class="cta">
-                <a href="${FRONT_END_URL_PROD}/e-ticket/${order_id}" target="_blank">
-                    <button>Check E-Ticket</button>
-                </a>
-            </div>
-            <br />
-            <p>
-                Thank you for booking your ticket with us. If you have any questions or concerns, feel free to <a
-                    href="https://wa.me/6281210696745" target="_blank">contact
-                    us.</a></p>
-        </div>
-        <div class="footer">
-            <p>This independent TEDx event is operated under license from TED.</p>
-            <p>&copy; 2024 All rights reserved</p>
-        </div>
-    </div>
-</body>
-
-</html>`, // html body
+        </body>
+        
+        </html>`, // html body
     }
     const res = await send_email(config)
 
