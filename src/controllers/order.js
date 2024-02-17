@@ -150,7 +150,7 @@ const add_order_without_payment = async (req, res) => {
 
         const data = await Order.create(payload)
 
-        await sendEmail(data._id, { gross_amount: total_price }, payload)
+        await sendEmail(data._id, payload)
 
         if (data) {
             return res.status(200).json({
@@ -334,10 +334,7 @@ const delete_order = async (req, res) => {
     }
 }
 
-const sendEmail = async (order_id, body, data) => {
-    const ticket = await Ticket.findOne({ _id: data.ticket_id })
-    const event = await Event.findOne({ _id: ticket.event_id })
-
+const sendEmail = async (order_id, data) => {
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -442,12 +439,6 @@ const sendEmail = async (order_id, body, data) => {
                         <p><b>Payment Success: Ticket Confirmed! 🎫</b></p>
                         <p>Yeayy! Ticket payment has been made successfully! Now it's time to grab your tickets and get ready for an unforgettable experience!</p>
                         <p>Click the button below to instantly access your tickets:</p>
-                        <!-- <p><strong>Order ID:</strong> ${order_id}</p>
-                        <p><strong>Guest:</strong> ${data.full_name}</p>
-                        <p><strong>Event:</strong> ${event.event}</p>
-                        <p><strong>Date:</strong> ${event.date}</p>
-                        <p><strong>Location:</strong> ${event.place}</p>
-                        <p><strong>Price:</strong> IDR ${body.gross_amount}</p> -->
                         <div class="cta">
                             <a href="${FRONT_END_URL_PROD}/e-ticket/${order_id}" target="_blank">
                                 <button>Ticket</button>
@@ -511,11 +502,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                sendEmail(body.order_id, body, data).then(result => console.log(result))
+                sendEmail(body.order_id, data).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            sendEmail(body.order_id, body, data).then(result => console.log(result))
+            sendEmail(body.order_id, data).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
