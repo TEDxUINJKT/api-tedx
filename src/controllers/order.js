@@ -214,18 +214,27 @@ const add_order = async (req, res) => {
                     refferal_code: refferal
                 }
             }
+
             snapMidtrans.createTransaction(midtrans_payload).then(async (midtrans_response) => {
                 await Order.updateOne({ _id: data._id },
                     {
                         snap_token: midtrans_response.token,
                         snap_redirect_url: midtrans_response.redirect_url
                     })
-    
-                await Ticket.updateOne({ _id: ticket_id},
-                    {
-                        quota: quota-quantity
-                    })
 
+                if(quota-quantity === 0){
+                    await Ticket.updateOne({ _id: ticket_id},
+                        {
+                            status: 'Sold Out',
+                            quota: quota-quantity
+                        })
+                }else{
+                    await Ticket.updateOne({ _id: ticket_id},
+                        {
+                            quota: quota-quantity
+                        })
+                }
+                
                 return res.status(200).json({
                     status: 200,
                     message: "Success Add New Order",
@@ -243,6 +252,13 @@ const add_order = async (req, res) => {
                 })
             })
         }else{
+            if(quantity === 0){
+                await Ticket.updateOne({ _id: ticket_id},
+                    {
+                        status: 'Sold Out'
+                    })
+            }
+            
             return res.status(500).json({
                 status: 400,
                 message: 'Order Failed',
