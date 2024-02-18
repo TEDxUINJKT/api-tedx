@@ -148,23 +148,40 @@ const add_order_without_payment = async (req, res) => {
             ticket_id, quantity:1,event_name,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
-        const data = await Order.create(payload)
+        const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
 
-        await sendEmail(data._id, payload)
+        if(quota >= quantity){
+            const data = await Order.create(payload)
 
-        if (data) {
-            return res.status(200).json({
-                status: 200,
-                message: "Success Add New Order",
-                data
-            })
-        } else {
-            return res.status(500).json({
-                status: 500,
-                message: 'Midtrans Failed',
-                info: 'Cannot Add New Order {MIDTRANS}',
-                stack: err
-            })
+            await sendEmail(data._id, payload)
+    
+            if (data) {
+                if(quota-quantity === 0){
+                    await Ticket.updateOne({ _id: ticket_id},
+                        {
+                            status: 'Sold Out',
+                            quota: quota-quantity
+                        })
+                }else{
+                    await Ticket.updateOne({ _id: ticket_id},
+                        {
+                            quota: quota-quantity
+                        })
+                }
+                
+                return res.status(200).json({
+                    status: 200,
+                    message: "Success Add New Order",
+                    data
+                })
+            } else {
+                return res.status(500).json({
+                    status: 500,
+                    message: 'Midtrans Failed',
+                    info: 'Cannot Add New Order {MIDTRANS}',
+                    stack: err
+                })
+            }
         }
     } catch (err) {
         return res.status(500).json({

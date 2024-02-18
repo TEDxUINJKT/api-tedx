@@ -22,7 +22,8 @@ const config = {
     "NODEMAILER_HOST": process.env.NODEMAILER_HOST,
     "NODEMAILER_PORT": process.env.NODEMAILER_PORT,
     "NODEMAILER_USER": process.env.NODEMAILER_USER,
-    "NODEMAILER_PASS": process.env.NODEMAILER_PASS
+    "NODEMAILER_PASS": process.env.NODEMAILER_PASS,
+    "SALT":process.env.SALT
 }
 
 module.exports = config

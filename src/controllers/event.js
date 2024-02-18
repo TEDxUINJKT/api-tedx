@@ -1,6 +1,7 @@
 const Event = require('../models/event.js')
 const Ticket = require('../models/ticket.js')
 const { upload, destroy } = require('../libs/fileHandler.js')
+const {encrypt} = require('../libs/crypto.js')
 
 const get_event = async (req, res) => {
     const { version } = req.params
@@ -64,11 +65,14 @@ const get_ticket_detail = async (req, res) => {
         } else {
             const event = await Event.findOne({_id:ticket.event_id})
 
+            const plain = JSON.stringify(ticket)
+            const parsed = JSON.parse(plain)
+
             return res.status(200).json({
                 status: 200,
                 message: "Success Get Ticket Detail",
                 detail: {
-                    ticket,
+                    ticket:{...parsed,refferal:encrypt(JSON.stringify(parsed.refferal))},
                     event
                 }
             })
@@ -88,10 +92,18 @@ const get_ticket_list = async (req, res) => {
     try {
         const data = await Ticket.find({ event_id: id,is_publish:true })
 
+        const new_data = data.map((each) => {
+            const plain = JSON.stringify(each)
+            const parsed = JSON.parse(plain)
+            return {
+                ...parsed,refferal:encrypt(JSON.stringify(each.refferal))
+            }
+        })
+
         return res.status(200).json({
             status: 200,
             message: "Success Get Ticket List",
-            tickets: data
+            tickets: new_data
         })
     } catch (err) {
         return res.status(500).json({
