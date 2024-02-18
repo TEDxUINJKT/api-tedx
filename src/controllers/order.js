@@ -145,7 +145,7 @@ const add_order_without_payment = async (req, res) => {
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id,total_guest:1, quantity:1,event_name,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
+            ticket_id, quantity:1,event_name,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
         const data = await Order.create(payload)
@@ -177,63 +177,79 @@ const add_order_without_payment = async (req, res) => {
 }
 
 const add_order = async (req, res) => {
-    const { user_id, price,total_guest, event_name,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id, price, event_name,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, user_id,total_guest,event_name, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id, user_id,event_name, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
         }
 
-        const data = await Order.create(payload)
+        const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
 
-        const midtrans_payload = {
-            transaction_details: {
-                order_id: data._id.toString(),
-                gross_amount: total_price
-            },
-            item_details: [
-                {
-                    id: ticket_id,
-                    name: `${ticket_name} Ticket`,
-                    price: total_price,
-                    quantity: 1,
-                    user: user_id
+        if(quota >= quantity){
+            const data = await Order.create(payload)
+
+            const midtrans_payload = {
+                transaction_details: {
+                    order_id: data._id.toString(),
+                    gross_amount: total_price
+                },
+                item_details: [
+                    {
+                        id: ticket_id,
+                        name: `${ticket_name} Ticket`,
+                        price: total_price,
+                        quantity: 1,
+                        user: user_id
+                    }
+                ],
+                customer_details: {
+                    email,
+                    first_name,
+                    last_name,
+                    phone: phone_number
+                },
+                additional: {
+                    is_refferal,
+                    refferal_code: refferal
                 }
-            ],
-            customer_details: {
-                email,
-                first_name,
-                last_name,
-                phone: phone_number
-            },
-            additional: {
-                is_refferal,
-                refferal_code: refferal
             }
-        }
-        snapMidtrans.createTransaction(midtrans_payload).then(async (midtrans_response) => {
-            await Order.updateOne({ _id: data._id },
-                {
+            snapMidtrans.createTransaction(midtrans_payload).then(async (midtrans_response) => {
+                await Order.updateOne({ _id: data._id },
+                    {
+                        snap_token: midtrans_response.token,
+                        snap_redirect_url: midtrans_response.redirect_url
+                    })
+    
+                await Ticket.updateOne({ _id: ticket_id},
+                    {
+                        quota: quota-quantity
+                    })
+
+                return res.status(200).json({
+                    status: 200,
+                    message: "Success Add New Order",
+                    data,
                     snap_token: midtrans_response.token,
                     snap_redirect_url: midtrans_response.redirect_url
                 })
-
-            return res.status(200).json({
-                status: 200,
-                message: "Success Add New Order",
-                data,
-                snap_token: midtrans_response.token,
-                snap_redirect_url: midtrans_response.redirect_url
+    
+            }).catch(err => {
+                return res.status(500).json({
+                    status: 500,
+                    message: 'Midtrans Failed',
+                    info: 'Cannot Add New Order {MIDTRANS}',
+                    stack: err
+                })
             })
-
-        }).catch(err => {
+        }else{
             return res.status(500).json({
-                status: 500,
-                message: 'Midtrans Failed',
-                info: 'Cannot Add New Order {MIDTRANS}',
-                stack: err
+                status: 400,
+                message: 'Order Failed',
+                info: 'Out Of Quota',
             })
-        })
+        }
+        
     } catch (err) {
         return res.status(500).json({
             status: 500,

@@ -16,10 +16,6 @@ const order_scheme = new mongoose.Schema({
         type:Boolean,
         default:false
     },
-    total_guest:{
-        type:Number,
-        default:1
-    },
     payment_method: {
         type: String,
         default: 'none'
@@ -37,14 +33,7 @@ const order_scheme = new mongoose.Schema({
         enum: ['Unpaid', 'Paid', 'Failed', 'Pending'],
         default: 'Unpaid'
     },
-    attend_status: {
-        type: Object,
-        default: {
-            total_guest:1,
-            attended_guest:0,
-            is_attend:false
-        }
-    },
+    attend_status: Boolean,
     is_refferal: {
         type: Boolean,
         default: false
