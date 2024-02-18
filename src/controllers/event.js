@@ -86,7 +86,27 @@ const get_ticket_detail = async (req, res) => {
 const get_ticket_list = async (req, res) => {
     const { id } = req.params
     try {
-        const data = await Ticket.find({ event_id: id })
+        const data = await Ticket.find({ event_id: id,is_publish:true })
+
+        return res.status(200).json({
+            status: 200,
+            message: "Success Get Ticket List",
+            tickets: data
+        })
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
+const get_ticket_all_list = async (req, res) => {
+    const { id } = req.params
+    try {
+        const data = await Ticket.find({ event_id: id})
 
         return res.status(200).json({
             status: 200,
@@ -358,4 +378,4 @@ const delete_ticket = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_event, get_detail_event,get_ticket_detail, get_ticket_list, add_event, add_ticket, update_event, update_ticket, delete_event, delete_ticket }
+module.exports = { get_event, get_detail_event,get_ticket_detail,get_ticket_all_list, get_ticket_list, add_event, add_ticket, update_event, update_ticket, delete_event, delete_ticket }
