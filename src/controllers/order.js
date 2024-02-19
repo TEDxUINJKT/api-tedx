@@ -23,7 +23,7 @@ const get_order_list = async (req, res) => {
     try {
         const orders = await Order.find({ event_id })
     
-        if (orders.length > 0) {
+        if (orders.length > 0) {            
             return res.status(200).json({
                 status: 200,
                 message: 'Success Get Order List',
@@ -53,11 +53,22 @@ const check_order = async (req, res) => {
         const order = await Order.findOne({ _id: order_id })
 
         if (order) {
-            return res.status(200).json({
-                status: 200,
-                message: 'Success Get Order Data',
-                data: order
-            })
+            const payload = { is_attend: true }
+
+            const data = await Order.updateOne({ _id: order_id }, payload)
+
+            if (!data) {
+                return res.status(403).json({
+                    status: 403,
+                    message: 'failed',
+                    info: 'Cannot Change Status Guest'
+                })
+            } else {
+                return res.status(200).json({
+                    status: 200,
+                    message: "Guest is Attended",
+                })
+            }
         } else {
             return res.status(400).json({
                 status: 400,
@@ -326,36 +337,6 @@ const update_order = async (req, res) => {
     }
 }
 
-const attend_guest = async (req, res) => {
-    const { order_id } = req.params
-
-    try {
-        const payload = { is_attend: true }
-
-        const data = await Order.updateOne({ _id: order_id }, payload)
-
-        if (!data) {
-            return res.status(403).json({
-                status: 403,
-                message: 'failed',
-                info: 'Cannot Change Status Guest'
-            })
-        } else {
-            return res.status(200).json({
-                status: 200,
-                message: "Guest is Attended",
-            })
-        }
-    } catch (err) {
-        return res.status(500).json({
-            status: 500,
-            message: 'failed',
-            info: 'server error',
-            stack: err
-        })
-    }
-}
-
 const delete_order = async (req, res) => {
     const { order_id } = req.params
     try {
@@ -593,4 +574,4 @@ const handle_order = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, attend_guest, delete_order, handle_order, get_eticket }
+module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket }
