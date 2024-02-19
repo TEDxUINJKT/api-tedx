@@ -6,6 +6,7 @@ const { verify_access_token } = require('../libs/jwt.js')
 
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
+const puppeteer = require('puppeteer');
 const midtransClient = require('midtrans-client');
 
 const {
@@ -121,6 +122,30 @@ const get_eticket = async (req, res) => {
             }
         })
 
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'failed',
+            info: 'server error',
+            stack: err
+        })
+    }
+}
+
+const get_pub_eticket = async (req, res) => {
+    const { order_id } = req.params
+
+    try {
+        const order = await Order.findOne({ _id: order_id })
+
+        const ticket = await Ticket.findOne({ _id: order.ticket_id })
+        const event = await Event.findOne({ _id: ticket.event_id })
+
+        return res.status(200).json({
+            status: 200,
+            message: "success get eticket data",
+            data: { order, ticket, event }
+        })
     } catch (err) {
         return res.status(500).json({
             status: 500,
@@ -558,6 +583,42 @@ const handle_order = async (req, res) => {
     }
 }
 
+const handleGetData = async (req,res) => {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto('https://www.tedxuinjakarta.com');
+
+    const element = await page.waitForSelector('nav');
+
+    console.log(element)
+    // Lakukan tangkapan layar halaman web
+    const screenshoot = await element.screenshot({ path: 'google.png' });
+
+    await browser.close();
+
+    const config = {
+        from: {
+            name: 'TEDxUINJakarta',
+            address: 'tedxuinjktdev@gmail.com'
+        }, // sender address
+        to: 'loloklolok14@gmail.com', // list of receivers
+        subject: "E-Ticket TEDxUINJakarta", // Subject line
+        html:`<p>OK GAS</p>`,
+        attachments:[
+            {
+                filename:'screenshoot.png',
+                content:screenshoot
+            }
+        ]
+    }
+
+    const data = await send_email(config)
+
+    res.status(200).json({
+        status: 'success',
+        message: 'OK',
+    })
+}
 
 // const name = async (req,res) => {
 //     try{
@@ -575,4 +636,4 @@ const handle_order = async (req, res) => {
 //     }
 // }
 
-module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket }
+module.exports = { handleGetData,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
