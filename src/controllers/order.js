@@ -145,7 +145,7 @@ const add_order_without_payment = async (req, res) => {
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, quantity:1,event_name,event_id,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
+            ticket_id, quantity:1, event_name, event_id, ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
@@ -294,12 +294,12 @@ const add_order = async (req, res) => {
 }
 
 const update_order = async (req, res) => {
-    const { quantity,ticket_name,  email, first_name, last_name, university, phone_number, payment_method, is_refferal, refferal, status } = req.body
+    const { email, full_name, university, phone_number,status } = req.body
     const { order_id } = req.params
 
     try {
         const payload = {
-            email,quantity,ticket_name, full_name: `${first_name} ${last_name}`, university, phone_number, payment_method, is_refferal, refferal, status
+            email, full_name, university, phone_number, status
         }
 
         const data = await Order.updateOne({ _id: order_id }, payload)
