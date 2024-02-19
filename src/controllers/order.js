@@ -152,7 +152,7 @@ const get_user_order_list = async (req, res) => {
 }
 
 const add_order_without_payment = async (req, res) => {
-    const { user_id, event_name, event_id, email, first_name, last_name, university, phone_number } = req.body
+    const { user_id, event_name, event_id,ticket_type, email, first_name, last_name, university, phone_number } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
@@ -557,6 +557,7 @@ const handle_order = async (req, res) => {
         })
     }
 }
+
 
 // const name = async (req,res) => {
 //     try{

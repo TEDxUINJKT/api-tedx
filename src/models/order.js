@@ -34,7 +34,10 @@ const order_scheme = new mongoose.Schema({
         enum: ['Unpaid', 'Paid', 'Failed', 'Pending'],
         default: 'Unpaid'
     },
-    attend_status: Boolean,
+    attend_status: {
+        type: Boolean,
+        default: false
+    },
     is_refferal: {
         type: Boolean,
         default: false
