@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const order_scheme = new mongoose.Schema({
     ticket_id: String,
     user_id: String,
+    event_id:String,
     price: Number,
     total_price: Number,
     email: String,

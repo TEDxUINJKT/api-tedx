@@ -21,13 +21,13 @@ const snapMidtrans = new midtransClient.Snap({
 const get_order_list = async (req, res) => {
     const { event_id } = req.params
     try {
-        const tickets = await Ticket.find({ event_id })
-
-        if (tickets.length > 0) {
+        const orders = await Order.find({ event_id })
+    
+        if (orders.length > 0) {
             return res.status(200).json({
                 status: 200,
                 message: 'Success Get Order List',
-                data: tickets
+                data: orders
             })
         } else {
             return res.status(200).json({
@@ -141,11 +141,11 @@ const get_user_order_list = async (req, res) => {
 }
 
 const add_order_without_payment = async (req, res) => {
-    const { user_id, event_name, email, first_name, last_name, university, phone_number } = req.body
+    const { user_id, event_name, event_id, email, first_name, last_name, university, phone_number } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, quantity:1,event_name,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
+            ticket_id, quantity:1,event_name,event_id,ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
@@ -194,11 +194,11 @@ const add_order_without_payment = async (req, res) => {
 }
 
 const add_order = async (req, res) => {
-    const { user_id, price, event_name,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id, price, event_name,event_id,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, user_id,event_name, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id, user_id,event_name,event_id, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
         }
 
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
