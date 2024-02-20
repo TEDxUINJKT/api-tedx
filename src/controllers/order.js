@@ -7,7 +7,7 @@ const { verify_access_token } = require('../libs/jwt.js')
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
 const playwright = require('playwright-core')
-const chromium = require('@sparticuz/chromium-min')
+const chromium = require('@sparticuz/chromium')
 const midtransClient = require('midtrans-client')
 const { jsPDF } = require("jspdf")
 
