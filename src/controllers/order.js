@@ -586,6 +586,9 @@ const handle_order = async (req, res) => {
 }
 
 const handleGetPDF = async (id) => {
+    chromium.setHeadlessMode = true;
+    chromium.setGraphicsMode = false;
+
     // Serverless
     const browser = await playwright.chromium.launch({
         args: chromium.args,
