@@ -6,11 +6,9 @@ const { verify_access_token } = require('../libs/jwt.js')
 
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
-const puppeteer = require('puppeteer');
-const midtransClient = require('midtrans-client');
-const { jsPDF } = require("jspdf");
-const fs = require('fs')
-const path = require("path");
+const {chromium} = require('playwright-core')
+const midtransClient = require('midtrans-client')
+const { jsPDF } = require("jspdf")
 
 const {
     FRONT_END_URL_PROD,
@@ -587,16 +585,18 @@ const handle_order = async (req, res) => {
 }
 
 const handleGetPDF = async (id) => {
-    const browser = await puppeteer.launch();
+    // const browser = await puppeteer.launch();
+
+    const browser = await chromium.launch();
+
     const page = await browser.newPage();
 
-    await page.setViewport({
+    await page.setViewportSize({
         width: 1480,
-        height: 1280,
-        deviceScaleFactor: 1,
+        height: 1280
     });
 
-    const url = `https://www.tedxuinjakarta.com/pub/all/${id}`;
+    const url = `https://tedxuinjakarta.vercel.app/pub/all/${id}`;
     await page.goto(url);
 
     await new Promise(resolve => setTimeout(resolve, 3000));    
