@@ -10,6 +10,7 @@ const playwright = require('playwright-core')
 const chromium = require('@sparticuz/chromium')
 const midtransClient = require('midtrans-client')
 const { jsPDF } = require("jspdf")
+const { Readable } = require('stream');
 
 const {
     FRONT_END_URL_PROD,
@@ -391,57 +392,7 @@ const delete_order = async (req, res) => {
     }
 }
 
-const getPdf = async (order_id, data) => {
-    // Serverless
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
-
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-    });
-
-    // Local
-    // const browser = await playwright.chromium.launch();
-
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.setViewportSize({
-        width: 1480,
-        height: 1280
-    });
-
-    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
-    await page.goto(url);
-
-    await new Promise(resolve => setTimeout(resolve, 5000));    
-
-    // Tunggu hingga semua elemen .ticket muncul
-    const tickets = await page.$$('.ticket');
-
-    const pdf = new jsPDF();
-
-    let pdf_list = []
-
-    for (let i = 0; i < tickets.length; i++) {
-        const ticket = tickets[i];
-        const image = await ticket.screenshot({ encoding: 'base64' })
-
-        const ratio = 2.75
-        const imgOptions = {
-            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
-            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
-        };
-
-        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
-
-        pdf_list.push(pdf)
-    }
-
-    await browser.close();
-
+const sendMail = async (order_id, data,files =[]) => {
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -568,25 +519,22 @@ const getPdf = async (order_id, data) => {
         </body>
         
         </html>`,// html body
-        // attachments:pdf_list.map((each, index) => {
-        //     const pdfBuffer = each.output('arraybuffer')
-        //     const pdfBufferData = Buffer.from(pdfBuffer)
-
-        //     return { 
-        //         filename: `${data.ticket_type} Ticket [${index}].pdf`,
-        //         content:pdfBufferData 
-        //     }
-        // })
+        attachments:files.map((each, index) => {
+            return { 
+                filename: `${data.ticket_type} Ticket [${index}].pdf`,
+                content:each 
+            }
+        })
     }
 
-    send_email(config)
+    await send_email(config)
 
-    if(pdf_list.length > 0){
+    if(files.length > 0){
         await Order.updateOne({_id:order_id},{sended_email:true})
     }
 
     return {
-        status: 'success'
+        status: 'success',
     }
 }
 
@@ -606,12 +554,69 @@ const checkHash = async (body) => {
     }
 }
 
+const getPDF = async (order_id) => {
+    // Serverless
+    chromium.setHeadlessMode = true;
+    chromium.setGraphicsMode = false;
+
+    const browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+    });
+
+    // Local
+    // const browser = await playwright.chromium.launch();
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.setViewportSize({
+        width: 1480,
+        height: 1280
+    });
+
+    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
+    await page.goto(url);
+
+    await new Promise(resolve => setTimeout(resolve, 5000));    
+
+    // Tunggu hingga semua elemen .ticket muncul
+    const tickets = await page.$$('.ticket');
+
+    const pdf = new jsPDF();
+
+    let pdf_list = []
+
+    for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        const image = await ticket.screenshot({ encoding: 'base64' })
+
+        const ratio = 2.75
+        const imgOptions = {
+            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
+            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
+        };
+
+        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
+
+        const pdfBuffer = pdf.output('arraybuffer')
+        const pdfBufferData = Buffer.from(pdfBuffer)
+        pdf_list.push(pdfBufferData)
+    }
+
+    await browser.close();
+
+    return await pdf_list
+}
+
 const handle_order = async (req, res) => {
     const body = req.body
     try {
         checkHash(body)
 
         const data = await Order.findOne({ _id: body.order_id })
+        const pdfList = await getPDF(body.order_id)
 
         const payment_status = body.transaction_status
         const fraud_status = body.fraud_status
@@ -619,11 +624,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                getPdf(body.order_id, data).then(result => console.log(result))
+                sendMail(body.order_id, data,pdfList).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            getPdf(body.order_id, data).then(result => console.log(result))
+            sendMail(body.order_id, data,pdfList).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
