@@ -392,7 +392,9 @@ const delete_order = async (req, res) => {
     }
 }
 
-const sendMail = async (order_id, data,files =[]) => {
+const sendMail = async (order_id, data) => {
+    const pdfList = await getPDF(body.order_id)
+
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -519,7 +521,7 @@ const sendMail = async (order_id, data,files =[]) => {
         </body>
         
         </html>`,// html body
-        attachments:files.map((each, index) => {
+        attachments:pdfList.map((each, index) => {
             return { 
                 filename: `${data.ticket_type} Ticket [${index}].pdf`,
                 content:each 
@@ -529,7 +531,7 @@ const sendMail = async (order_id, data,files =[]) => {
 
     await send_email(config)
 
-    if(files.length > 0){
+    if(pdfList.length > 0){
         await Order.updateOne({_id:order_id},{sended_email:true})
     }
 
@@ -616,7 +618,6 @@ const handle_order = async (req, res) => {
         checkHash(body)
 
         const data = await Order.findOne({ _id: body.order_id })
-        const pdfList = await getPDF(body.order_id)
 
         const payment_status = body.transaction_status
         const fraud_status = body.fraud_status
@@ -624,11 +625,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                sendMail(body.order_id, data,pdfList).then(result => console.log(result))
+                sendMail(body.order_id, data).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            sendMail(body.order_id, data,pdfList).then(result => console.log(result))
+            sendMail(body.order_id, data).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
