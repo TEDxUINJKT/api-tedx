@@ -392,10 +392,10 @@ const delete_order = async (req, res) => {
 }
 
 const sendEmail = async (order_id, data) => {
+    // Serverless
     chromium.setHeadlessMode = true;
     chromium.setGraphicsMode = false;
 
-    // Serverless
     const browser = await playwright.chromium.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
@@ -441,7 +441,7 @@ const sendEmail = async (order_id, data) => {
     }
 
     await browser.close();
-    
+
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -579,10 +579,10 @@ const sendEmail = async (order_id, data) => {
         })
     }
 
-    const res = await send_email(config)
+    send_email(config)
 
-    if(res.includes('OK')){
-        await Order.updateOne({_id:order_id},{sended_email:true})
+    if(pdf_list.length > 0){
+        Order.updateOne({_id:order_id},{sended_email:true})
     }
 
     return {
@@ -619,11 +619,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                sendEmail(body.order_id, data).then(result => console.log(result))
+                await sendEmail(body.order_id, data).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            sendEmail(body.order_id, data).then(result => console.log(result))
+            await sendEmail(body.order_id, data).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
