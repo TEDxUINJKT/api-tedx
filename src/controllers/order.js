@@ -393,7 +393,7 @@ const delete_order = async (req, res) => {
 }
 
 const sendMail = async (order_id, data) => {
-    const pdfList = await getPDF(body.order_id)
+    const pdfList = await getPDF(order_id)
 
     const config = {
         from: {
