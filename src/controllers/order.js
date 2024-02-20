@@ -585,9 +585,15 @@ const handle_order = async (req, res) => {
 }
 
 const handleGetPDF = async (id) => {
-    // const browser = await puppeteer.launch();
+    // Serverless
+    const browser = await chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath,
+        headless: chromium.headless,
+    });
 
-    const browser = await chromium.launch();
+    // Local
+    // const browser = await chromium.launch();
 
     const page = await browser.newPage();
 
@@ -599,7 +605,7 @@ const handleGetPDF = async (id) => {
     const url = `https://tedxuinjakarta.vercel.app/pub/all/${id}`;
     await page.goto(url);
 
-    await new Promise(resolve => setTimeout(resolve, 3000));    
+    await new Promise(resolve => setTimeout(resolve, 4000));    
 
     // Tunggu hingga semua elemen .ticket muncul
     const tickets = await page.$$('.ticket');
