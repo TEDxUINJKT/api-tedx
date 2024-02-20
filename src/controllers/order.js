@@ -191,8 +191,6 @@ const add_order_without_payment = async (req, res) => {
         if(quota >= quantity){
             const data = await Order.create(payload)
 
-            await sendEmail(data._id, payload)
-    
             if (data) {
                 if(quota-quantity === 0){
                     await Ticket.updateOne({ _id: ticket_id},
@@ -206,6 +204,8 @@ const add_order_without_payment = async (req, res) => {
                             quota: quota-quantity
                         })
                 }
+
+                sendEmail(data._id, payload)
                 
                 return res.status(200).json({
                     status: 200,
@@ -216,7 +216,7 @@ const add_order_without_payment = async (req, res) => {
                 return res.status(500).json({
                     status: 500,
                     message: 'Midtrans Failed',
-                    info: 'Cannot Add New Order {MIDTRANS}',
+                    info: 'Cannot Add New Order',
                     stack: err
                 })
             }
