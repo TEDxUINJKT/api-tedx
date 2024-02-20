@@ -586,18 +586,18 @@ const handle_order = async (req, res) => {
 }
 
 const handleGetPDF = async (id) => {
-    // chromium.setHeadlessMode = true;
-    // chromium.setGraphicsMode = false;
+    chromium.setHeadlessMode = true;
+    chromium.setGraphicsMode = false;
 
     // Serverless
-    // const browser = await playwright.chromium.launch({
-    //     args: chromium.args,
-    //     executablePath: await chromium.executablePath(),
-    //     headless: chromium.headless,
-    // });
+    const browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+    });
 
     // Local
-    const browser = await playwright.chromium.launch();
+    // const browser = await playwright.chromium.launch();
 
     const context = await browser.newContext();
     const page = await context.newPage();
