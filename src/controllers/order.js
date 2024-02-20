@@ -8,6 +8,9 @@ const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
 const puppeteer = require('puppeteer');
 const midtransClient = require('midtrans-client');
+const { jsPDF } = require("jspdf");
+const fs = require('fs')
+const path = require("path");
 
 const {
     FRONT_END_URL_PROD,
@@ -583,40 +586,76 @@ const handle_order = async (req, res) => {
     }
 }
 
-const handleGetData = async (req,res) => {
+const handleGetPDF = async (id) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    await page.goto('https://www.tedxuinjakarta.com');
 
-    const element = await page.waitForSelector('nav');
+    await page.setViewport({
+        width: 1480,
+        height: 1280,
+        deviceScaleFactor: 1,
+    });
 
-    console.log(element)
-    // Lakukan tangkapan layar halaman web
-    const screenshoot = await element.screenshot({ path: 'google.png' });
+    const url = `https://www.tedxuinjakarta.com/pub/all/${id}`;
+    await page.goto(url);
+
+    await new Promise(resolve => setTimeout(resolve, 3000));    
+
+    // Tunggu hingga semua elemen .ticket muncul
+    const tickets = await page.$$('.ticket');
+
+    const pdf = new jsPDF();
+
+    let pdf_list = []
+
+    for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        const image = await ticket.screenshot({ encoding: 'base64' })
+
+        const ratio = 2.75
+        const imgOptions = {
+            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
+            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
+        };
+
+        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
+
+        pdf_list.push(pdf)
+    }
 
     await browser.close();
 
+    return await pdf_list
+}
+
+const sendMail = async (req,res) => {
+    const {id} = req.params
+    const attachment_list = await handleGetPDF(id)
     const config = {
         from: {
             name: 'TEDxUINJakarta',
             address: 'tedxuinjktdev@gmail.com'
         }, // sender address
-        to: 'loloklolok14@gmail.com', // list of receivers
+        to: 'azzamnakkuliah@gmail.com', // list of receivers
         subject: "E-Ticket TEDxUINJakarta", // Subject line
-        html:`<p>OK GAS</p>`,
-        attachments:[
-            {
-                filename:'screenshoot.png',
-                content:screenshoot
+        html: `<p>OK GAS</p>`, // html body
+        attachments:attachment_list.map((each, index) => {
+            const pdfBuffer = each.output('arraybuffer')
+            const pdfBufferData = Buffer.from(pdfBuffer)
+
+            return { 
+                filename: `Ticket (${index}).pdf`,
+                content:pdfBufferData 
             }
-        ]
+        })
     }
 
-    const data = await send_email(config)
+    const response = await send_email(config)
 
     res.status(200).json({
-        status: 'success',
-        message: 'OK',
+        status:200,
+        message:'success',
+        response
     })
 }
 
@@ -636,4 +675,4 @@ const handleGetData = async (req,res) => {
 //     }
 // }
 
-module.exports = { handleGetData,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
+module.exports = { sendMail,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
