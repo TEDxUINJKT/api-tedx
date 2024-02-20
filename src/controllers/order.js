@@ -582,7 +582,7 @@ const getPdf = async (order_id, data) => {
     send_email(config)
 
     if(pdf_list.length > 0){
-        Order.updateOne({_id:order_id},{sended_email:true})
+        await Order.updateOne({_id:order_id},{sended_email:true})
     }
 
     return {
