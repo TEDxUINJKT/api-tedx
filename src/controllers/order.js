@@ -568,15 +568,15 @@ const getPdf = async (order_id, data) => {
         </body>
         
         </html>`,// html body
-        attachments:pdf_list.map((each, index) => {
-            const pdfBuffer = each.output('arraybuffer')
-            const pdfBufferData = Buffer.from(pdfBuffer)
+        // attachments:pdf_list.map((each, index) => {
+        //     const pdfBuffer = each.output('arraybuffer')
+        //     const pdfBufferData = Buffer.from(pdfBuffer)
 
-            return { 
-                filename: `${data.ticket_type} Ticket [${index}].pdf`,
-                content:pdfBufferData 
-            }
-        })
+        //     return { 
+        //         filename: `${data.ticket_type} Ticket [${index}].pdf`,
+        //         content:pdfBufferData 
+        //     }
+        // })
     }
 
     send_email(config)
