@@ -586,18 +586,18 @@ const handle_order = async (req, res) => {
 }
 
 const handleGetPDF = async (id) => {
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
+    // chromium.setHeadlessMode = true;
+    // chromium.setGraphicsMode = false;
 
     // Serverless
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-    });
+    // const browser = await playwright.chromium.launch({
+    //     args: chromium.args,
+    //     executablePath: await chromium.executablePath(),
+    //     headless: chromium.headless,
+    // });
 
     // Local
-    // const browser = await chromium.launch();
+    const browser = await playwright.chromium.launch();
 
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -639,8 +639,7 @@ const handleGetPDF = async (id) => {
     return await pdf_list
 }
 
-const sendMail = async (req,res) => {
-    const {id} = req.params
+const sendMail = async (id) => {
     const attachment_list = await handleGetPDF(id)
     const config = {
         from: {
@@ -661,12 +660,17 @@ const sendMail = async (req,res) => {
         })
     }
 
-    const response = await send_email(config)
+    await send_email(config)
+}
+
+const trigger = async (req,res) => {
+    const {id} = req.params
+
+    sendMail(id)
 
     res.status(200).json({
         status:200,
         message:'success',
-        response
     })
 }
 
@@ -686,4 +690,4 @@ const sendMail = async (req,res) => {
 //     }
 // }
 
-module.exports = { sendMail,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
+module.exports = { trigger,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
