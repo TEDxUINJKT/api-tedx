@@ -6,7 +6,8 @@ const { verify_access_token } = require('../libs/jwt.js')
 
 const config = require('../config/env.js')
 const send_email = require('../config/nodemailer')
-const {chromium} = require('playwright-core')
+const playwright = require('playwright-core')
+const chromium = require('@sparticuz/chromium-min')
 const midtransClient = require('midtrans-client')
 const { jsPDF } = require("jspdf")
 
@@ -586,16 +587,17 @@ const handle_order = async (req, res) => {
 
 const handleGetPDF = async (id) => {
     // Serverless
-    const browser = await chromium.launch({
+    const browser = await playwright.chromium.launch({
         args: chromium.args,
-        executablePath: await chromium.executablePath,
+        executablePath: await chromium.executablePath(),
         headless: chromium.headless,
     });
 
     // Local
     // const browser = await chromium.launch();
 
-    const page = await browser.newPage();
+    const context = await browser.newContext();
+    const page = await context.newPage();
 
     await page.setViewportSize({
         width: 1480,
