@@ -232,11 +232,11 @@ const add_order_without_payment = async (req, res) => {
 }
 
 const add_order = async (req, res) => {
-    const { user_id, price, event_name,event_id,quantity,ticket_name, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
+    const { user_id, price, event_name,event_id,quantity,ticket_type, total_price, email, first_name, last_name, university, phone_number, is_refferal, refferal } = req.body
     const { ticket_id } = req.params
     try {
         const payload = {
-            ticket_id, user_id,event_name,event_id, price, total_price,quantity,ticket_name, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
+            ticket_id, user_id,event_name,event_id, price, total_price,quantity,ticket_type, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
         }
 
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
@@ -392,6 +392,56 @@ const delete_order = async (req, res) => {
 }
 
 const sendEmail = async (order_id, data) => {
+    chromium.setHeadlessMode = true;
+    chromium.setGraphicsMode = false;
+
+    // Serverless
+    const browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+    });
+
+    // Local
+    // const browser = await playwright.chromium.launch();
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.setViewportSize({
+        width: 1480,
+        height: 1280
+    });
+
+    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
+    await page.goto(url);
+
+    await new Promise(resolve => setTimeout(resolve, 4000));    
+
+    // Tunggu hingga semua elemen .ticket muncul
+    const tickets = await page.$$('.ticket');
+
+    const pdf = new jsPDF();
+
+    let pdf_list = []
+
+    for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        const image = await ticket.screenshot({ encoding: 'base64' })
+
+        const ratio = 2.75
+        const imgOptions = {
+            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
+            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
+        };
+
+        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
+
+        pdf_list.push(pdf)
+    }
+
+    await browser.close();
+    
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -517,8 +567,18 @@ const sendEmail = async (order_id, data) => {
             </div>
         </body>
         
-        </html>`, // html body
+        </html>`,// html body
+        attachments:pdf_list.map((each, index) => {
+            const pdfBuffer = each.output('arraybuffer')
+            const pdfBufferData = Buffer.from(pdfBuffer)
+
+            return { 
+                filename: `${data.ticket_type} Ticket [${index}].pdf`,
+                content:pdfBufferData 
+            }
+        })
     }
+
     const res = await send_email(config)
 
     if(res.includes('OK')){
@@ -585,95 +645,6 @@ const handle_order = async (req, res) => {
     }
 }
 
-const handleGetPDF = async (id) => {
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
-
-    // Serverless
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-    });
-
-    // Local
-    // const browser = await playwright.chromium.launch();
-
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.setViewportSize({
-        width: 1480,
-        height: 1280
-    });
-
-    const url = `https://tedxuinjakarta.vercel.app/pub/all/${id}`;
-    await page.goto(url);
-
-    await new Promise(resolve => setTimeout(resolve, 4000));    
-
-    // Tunggu hingga semua elemen .ticket muncul
-    const tickets = await page.$$('.ticket');
-
-    const pdf = new jsPDF();
-
-    let pdf_list = []
-
-    for (let i = 0; i < tickets.length; i++) {
-        const ticket = tickets[i];
-        const image = await ticket.screenshot({ encoding: 'base64' })
-
-        const ratio = 2.75
-        const imgOptions = {
-            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
-            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
-        };
-
-        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
-
-        pdf_list.push(pdf)
-    }
-
-    await browser.close();
-
-    return await pdf_list
-}
-
-const sendMail = async (id) => {
-    const attachment_list = await handleGetPDF(id)
-    const config = {
-        from: {
-            name: 'TEDxUINJakarta',
-            address: 'tedxuinjktdev@gmail.com'
-        }, // sender address
-        to: 'azzamnakkuliah@gmail.com', // list of receivers
-        subject: "E-Ticket TEDxUINJakarta", // Subject line
-        html: `<p>OK GAS</p>`, // html body
-        attachments:attachment_list.map((each, index) => {
-            const pdfBuffer = each.output('arraybuffer')
-            const pdfBufferData = Buffer.from(pdfBuffer)
-
-            return { 
-                filename: `Ticket (${index}).pdf`,
-                content:pdfBufferData 
-            }
-        })
-    }
-
-    await send_email(config)
-}
-
-const trigger = async (req,res) => {
-    const {id} = req.params
-
-    sendMail(id)
-
-    res.status(200).json({
-        status:200,
-        message:'success',
-    })
-}
-
 // const name = async (req,res) => {
 //     try{
 //         return res.status(200).json({
@@ -690,4 +661,4 @@ const trigger = async (req,res) => {
 //     }
 // }
 
-module.exports = { trigger,get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
+module.exports = { get_order_list, check_order, get_user_order_list, add_order_without_payment, add_order, update_order, delete_order, handle_order, get_eticket,get_pub_eticket}
