@@ -391,7 +391,7 @@ const delete_order = async (req, res) => {
     }
 }
 
-const sendEmail = async (order_id, data) => {
+const getPdf = async (order_id, data) => {
     // Serverless
     chromium.setHeadlessMode = true;
     chromium.setGraphicsMode = false;
@@ -416,7 +416,7 @@ const sendEmail = async (order_id, data) => {
     const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
     await page.goto(url);
 
-    await new Promise(resolve => setTimeout(resolve, 4000));    
+    await new Promise(resolve => setTimeout(resolve, 5000));    
 
     // Tunggu hingga semua elemen .ticket muncul
     const tickets = await page.$$('.ticket');
@@ -619,11 +619,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                await sendEmail(body.order_id, data).then(result => console.log(result))
+                getPdf(body.order_id, data).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            await sendEmail(body.order_id, data).then(result => console.log(result))
+            getPdf(body.order_id, data).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
