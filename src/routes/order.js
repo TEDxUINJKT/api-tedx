@@ -12,8 +12,6 @@ order.get('/pub/e-ticket/:order_id', controller.get_pub_eticket)
 order.post('/:ticket_id', controller.add_order)
 order.post('/db/:ticket_id', event_role, controller.add_order_without_payment)
 order.post('/wb/midtrans', controller.handle_order)
-// order.patch('/send_email', controller.execute_email)
-
 
 // PATCH
 order.patch('/db/:order_id', event_role, controller.update_order)

@@ -393,59 +393,6 @@ const delete_order = async (req, res) => {
 }
 
 const getPDF = async (order_id, data) => {
-    // Serverless
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
-
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-    });
-
-    // Local
-    // const browser = await playwright.chromium.launch();
-
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.setViewportSize({
-        width: 1480,
-        height: 1280
-    });
-
-    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
-    await page.goto(url);
-
-    await new Promise(resolve => setTimeout(resolve, 5000));    
-
-    // Tunggu hingga semua elemen .ticket muncul
-    const tickets = await page.$$('.ticket');
-
-    // const pdf = new jsPDF();
-
-    let file_list = []
-
-    for (let i = 0; i < tickets.length; i++) {
-        const ticket = tickets[i];
-        const image = await ticket.screenshot({ encoding: 'base64' })
-
-        // const ratio = 2.75
-        // const imgOptions = {
-        //     width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
-        //     height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
-        // };
-
-        // pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
-
-        // const pdfBuffer = pdf.output('arraybuffer')
-        // const pdfBufferData = Buffer.from(pdfBuffer)
-        // pdf_list.push(pdfBufferData)
-        file_list.push(image)
-    }
-
-    await browser.close();
-
     const config = {
         from: {
             name: 'TEDxUINJakarta',
@@ -551,8 +498,8 @@ const getPDF = async (order_id, data) => {
                         <p>Yeayy! Ticket payment has been made successfully! Now it's time to grab your tickets and get ready for an unforgettable experience!</p>
                         <p>Click the button below to instantly access your tickets:</p>
                         <div class="cta">
-                            <a href="${FRONT_END_URL_PROD}/e-ticket/${order_id}" target="_blank">
-                                <button>Ticket</button>
+                            <a href="${FRONT_END_URL_PROD}/pub/all/${order_id}" target="_blank">
+                                <button>Download Ticket</button>
                             </a>
                         </div>
                         <p>Make sure you prepare with passion and enthusiasm. If you have any questions or need any assistance, please do not hesitate to <a
@@ -572,55 +519,13 @@ const getPDF = async (order_id, data) => {
         </body>
         
         </html>`,// html body,
-        // attachments:[]
-        attachments:pdf_list.map((each, index) => {
-                    return { 
-                        filename: `${data.ticket_type} Ticket [${index}].png`,
-                        content:each 
-                    }
-            })
     }
 
     await send_email(config)
-    // const formData = new FormData()
+    await Order.updateOne({ _id: body.order_id }, { sended_email: true })
 
-    // formData.append('data',JSON.stringify(config))
-    // pdf_list.forEach(each => {
-    //     formData.append('buffers',JSON.stringify(each))
-    // })
-
-    // axios.patch('http://localhost:8000/order/send_email',formData);
-    // await Order.updateOne({_id:order_id},{sended_email:true})
     return "Send Email"
 }
-
-// const execute_email = async (req,res) => {
-//     const {data,buffers} = req.body
-//     try{
-//         const config = JSON.parse(data)
-//         const files = JSON.parse(buffers)
-//         console.log(files)
-//         // config.attachments = buffers.map((each, index) => {
-//         //         return { 
-//         //             filename: `${data.ticket_type} Ticket [${index}].pdf`,
-//         //             content:each 
-//         //         }
-//         // })
-
-//         // await send_email(config)
-    
-//         res.status(200).json({
-//             status: 'success',
-//         })
-//     }catch(err){
-//         return res.status(500).json({
-//             status: 500,
-//             message: 'failed',
-//             info: 'server error',
-//             stack: err
-//         })
-//     }
-// }
 
 const checkHash = async (body) => {
     const hash = crypto.createHash('sha512').update(`${body.order_id}${body.status_code}${body.gross_amount}${MIDTRANS_SERVER_KEY}`).digest('hex')
