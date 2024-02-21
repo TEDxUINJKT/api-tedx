@@ -10,7 +10,7 @@ const playwright = require('playwright-core')
 const chromium = require('@sparticuz/chromium')
 const midtransClient = require('midtrans-client')
 const { jsPDF } = require("jspdf")
-const { Readable } = require('stream');
+const axios = require('axios')
 
 const {
     FRONT_END_URL_PROD,
@@ -206,7 +206,7 @@ const add_order_without_payment = async (req, res) => {
                         })
                 }
 
-                sendEmail(data._id, payload)
+                getPDF(data._id, payload)
                 
                 return res.status(200).json({
                     status: 200,
@@ -392,8 +392,59 @@ const delete_order = async (req, res) => {
     }
 }
 
-const sendMail = async (order_id, data) => {
-    const pdfList = await getPDF(order_id)
+const getPDF = async (order_id, data) => {
+    // Serverless
+    chromium.setHeadlessMode = true;
+    chromium.setGraphicsMode = false;
+
+    const browser = await playwright.chromium.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+    });
+
+    // Local
+    // const browser = await playwright.chromium.launch();
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.setViewportSize({
+        width: 1480,
+        height: 1280
+    });
+
+    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
+    await page.goto(url);
+
+    await new Promise(resolve => setTimeout(resolve, 5000));    
+
+    // Tunggu hingga semua elemen .ticket muncul
+    const tickets = await page.$$('.ticket');
+
+    // const pdf = new jsPDF();
+
+    let file_list = []
+
+    for (let i = 0; i < tickets.length; i++) {
+        const ticket = tickets[i];
+        const image = await ticket.screenshot({ encoding: 'base64' })
+
+        // const ratio = 2.75
+        // const imgOptions = {
+        //     width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
+        //     height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
+        // };
+
+        // pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
+
+        // const pdfBuffer = pdf.output('arraybuffer')
+        // const pdfBufferData = Buffer.from(pdfBuffer)
+        // pdf_list.push(pdfBufferData)
+        file_list.push(image)
+    }
+
+    await browser.close();
 
     const config = {
         from: {
@@ -520,25 +571,56 @@ const sendMail = async (order_id, data) => {
             </div>
         </body>
         
-        </html>`,// html body
-        attachments:pdfList.map((each, index) => {
-            return { 
-                filename: `${data.ticket_type} Ticket [${index}].pdf`,
-                content:each 
-            }
-        })
+        </html>`,// html body,
+        // attachments:[]
+        attachments:pdf_list.map((each, index) => {
+                    return { 
+                        filename: `${data.ticket_type} Ticket [${index}].png`,
+                        content:each 
+                    }
+            })
     }
 
     await send_email(config)
+    // const formData = new FormData()
 
-    if(pdfList.length > 0){
-        await Order.updateOne({_id:order_id},{sended_email:true})
-    }
+    // formData.append('data',JSON.stringify(config))
+    // pdf_list.forEach(each => {
+    //     formData.append('buffers',JSON.stringify(each))
+    // })
 
-    return {
-        status: 'success',
-    }
+    // axios.patch('http://localhost:8000/order/send_email',formData);
+    // await Order.updateOne({_id:order_id},{sended_email:true})
+    return "Send Email"
 }
+
+// const execute_email = async (req,res) => {
+//     const {data,buffers} = req.body
+//     try{
+//         const config = JSON.parse(data)
+//         const files = JSON.parse(buffers)
+//         console.log(files)
+//         // config.attachments = buffers.map((each, index) => {
+//         //         return { 
+//         //             filename: `${data.ticket_type} Ticket [${index}].pdf`,
+//         //             content:each 
+//         //         }
+//         // })
+
+//         // await send_email(config)
+    
+//         res.status(200).json({
+//             status: 'success',
+//         })
+//     }catch(err){
+//         return res.status(500).json({
+//             status: 500,
+//             message: 'failed',
+//             info: 'server error',
+//             stack: err
+//         })
+//     }
+// }
 
 const checkHash = async (body) => {
     const hash = crypto.createHash('sha512').update(`${body.order_id}${body.status_code}${body.gross_amount}${MIDTRANS_SERVER_KEY}`).digest('hex')
@@ -556,62 +638,6 @@ const checkHash = async (body) => {
     }
 }
 
-const getPDF = async (order_id) => {
-    // Serverless
-    chromium.setHeadlessMode = true;
-    chromium.setGraphicsMode = false;
-
-    const browser = await playwright.chromium.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-    });
-
-    // Local
-    // const browser = await playwright.chromium.launch();
-
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
-    await page.setViewportSize({
-        width: 1480,
-        height: 1280
-    });
-
-    const url = `https://tedxuinjakarta.vercel.app/pub/all/${order_id}`;
-    await page.goto(url);
-
-    await new Promise(resolve => setTimeout(resolve, 5000));    
-
-    // Tunggu hingga semua elemen .ticket muncul
-    const tickets = await page.$$('.ticket');
-
-    const pdf = new jsPDF();
-
-    let pdf_list = []
-
-    for (let i = 0; i < tickets.length; i++) {
-        const ticket = tickets[i];
-        const image = await ticket.screenshot({ encoding: 'base64' })
-
-        const ratio = 2.75
-        const imgOptions = {
-            width: pdf.internal.pageSize.getWidth(), // Sesuaikan lebar dengan lebar halaman PDF
-            height: pdf.internal.pageSize.getWidth()/ratio // Sesuaikan tinggi dengan tinggi halaman PDF
-        };
-
-        pdf.addImage(image, 'PNG', 0, 0, imgOptions.width, imgOptions.height)
-
-        const pdfBuffer = pdf.output('arraybuffer')
-        const pdfBufferData = Buffer.from(pdfBuffer)
-        pdf_list.push(pdfBufferData)
-    }
-
-    await browser.close();
-
-    return await pdf_list
-}
-
 const handle_order = async (req, res) => {
     const body = req.body
     try {
@@ -625,11 +651,11 @@ const handle_order = async (req, res) => {
         if (payment_status == 'capture') {
             if (fraud_status == 'accept') {
                 await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-                sendMail(body.order_id, data).then(result => console.log(result))
+                getPDF(body.order_id, data).then(result => console.log(result))
             }
         } else if (payment_status == 'settlement') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Paid', payment_method: body.payment_type })
-            sendMail(body.order_id, data).then(result => console.log(result))
+            getPDF(body.order_id, data).then(result => console.log(result))
         } else if (payment_status == 'cancel' || payment_status == 'deny' || payment_status == 'expire') {
             await Order.updateOne({ _id: body.order_id }, { status: 'Failed', payment_method: body.payment_type })
         } else if (payment_status == 'pending') {
@@ -650,7 +676,7 @@ const handle_order = async (req, res) => {
         })
     }
 }
-
+ 
 // const name = async (req,res) => {
 //     try{
 //         return res.status(200).json({
