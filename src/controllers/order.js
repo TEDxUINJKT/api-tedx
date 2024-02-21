@@ -522,7 +522,7 @@ const getPDF = async (order_id, data) => {
     }
 
     await send_email(config)
-    await Order.updateOne({ _id: body.order_id }, { sended_email: true })
+    await Order.updateOne({ _id: order_id }, { sended_email: true })
 
     return "Send Email"
 }
