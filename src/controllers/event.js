@@ -6,7 +6,7 @@ const {encrypt} = require('../libs/crypto.js')
 const get_event = async (req, res) => {
     const { version } = req.params
     try {
-        const data = await Event.find({ version })
+        const data = await Event.find({ version }).sort({created_at:-1})
 
         return res.status(200).json({
             status: 200,
@@ -90,7 +90,7 @@ const get_ticket_detail = async (req, res) => {
 const get_ticket_list = async (req, res) => {
     const { id } = req.params
     try {
-        const data = await Ticket.find({ event_id: id,is_publish:true })
+        const data = await Ticket.find({ event_id: id,is_publish:true }).sort({created_at:-1})
 
         const new_data = data.map((each) => {
             const plain = JSON.stringify(each)
@@ -118,7 +118,7 @@ const get_ticket_list = async (req, res) => {
 const get_ticket_all_list = async (req, res) => {
     const { id } = req.params
     try {
-        const data = await Ticket.find({ event_id: id})
+        const data = await Ticket.find({ event_id: id}).sort({created_at:-1})
 
         return res.status(200).json({
             status: 200,

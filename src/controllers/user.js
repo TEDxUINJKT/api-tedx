@@ -308,7 +308,7 @@ const delete_user = async (req, res) => {
 
 const user_list = async (req, res) => {
     try {
-        const users = await User.find({}, { _id: 1, username: 1, display_name: 1, role: 1 })
+        const users = await User.find({}, { _id: 1, username: 1, display_name: 1, role: 1 }).sort({created_at:-1})
 
         if (users.length > 0 && users !== null) {
             return res.status(200).json({

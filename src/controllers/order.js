@@ -25,7 +25,8 @@ const snapMidtrans = new midtransClient.Snap({
 const get_order_list = async (req, res) => {
     const { event_id } = req.params
     try {
-        const orders = await Order.find({ event_id })
+        const orders = await Order.find({ event_id }).sort({created_at:-1})
+        console.log(orders)
     
         if (orders.length > 0) {            
             return res.status(200).json({
@@ -55,28 +56,26 @@ const check_order = async (req, res) => {
     const { order_id } = req.params
     try {
         const order = await Order.findOne({ _id: order_id })
-
         if (order) {
-            const payload = { is_attend: true }
+            if (!order.attend_status) {
+                const payload = { attend_status: true }
 
-            const data = await Order.updateOne({ _id: order_id }, payload)
-
-            if (!data) {
-                return res.status(403).json({
-                    status: 403,
-                    message: 'failed',
-                    info: 'Cannot Change Status Guest'
-                })
-            } else {
+                const data = await Order.updateOne({ _id: order_id }, payload)
                 return res.status(200).json({
                     status: 200,
                     message: "Guest is Attended",
+                    data
+                })
+            } else {
+                return res.status(401).json({
+                    status: 401,
+                    info: "Ticket is already used",
                 })
             }
-        } else {
+        }else{
             return res.status(400).json({
                 status: 400,
-                message: 'Order Data Not Found',
+                info: 'Order Data Not Found',
             })
         }
     } catch (err) {
@@ -183,8 +182,9 @@ const add_order_without_payment = async (req, res) => {
     const { user_id, event_name, event_id,ticket_type, email, first_name, last_name, university, phone_number } = req.body
     const { ticket_id } = req.params
     try {
+        const quantity = 1
         const payload = {
-            ticket_id, quantity:1, event_name, event_id, ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
+            ticket_id, quantity, event_name, event_id, ticket_type, user_id, price: 0, total_price: 0, email, full_name: `${first_name} ${last_name}`, university, phone_number, status: 'Paid'
         }
 
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
@@ -216,13 +216,17 @@ const add_order_without_payment = async (req, res) => {
             } else {
                 return res.status(500).json({
                     status: 500,
-                    message: 'Midtrans Failed',
                     info: 'Cannot Add New Order',
-                    stack: err
                 })
             }
+        }else{
+            return res.status(500).json({
+                status: 500,
+                info: 'Out of Quota',
+            })
         }
     } catch (err) {
+        console.log(err)
         return res.status(500).json({
             status: 500,
             message: 'failed',
@@ -336,14 +340,16 @@ const update_order = async (req, res) => {
     const { email, full_name, university, phone_number,status } = req.body
     const { order_id } = req.params
 
-    try {
+    try {   
         const payload = {
             email, full_name, university, phone_number, status
         }
 
+        console.log(order_id)
+
         const data = await Order.updateOne({ _id: order_id }, payload)
 
-        if (!data) {
+        if (data.modifiedCount === 0) {
             return res.status(403).json({
                 status: 403,
                 message: 'failed',
