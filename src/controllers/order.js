@@ -67,8 +67,8 @@ const check_order = async (req, res) => {
                     data
                 })
             } else {
-                return res.status(401).json({
-                    status: 401,
+                return res.status(203).json({
+                    status: 203,
                     info: "Ticket is already used",
                 })
             }
