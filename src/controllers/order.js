@@ -244,6 +244,8 @@ const add_order = async (req, res) => {
             ticket_id, user_id,event_name,event_id, price, total_price,quantity,ticket_type, email, full_name: `${first_name} ${last_name}`, university, phone_number, is_refferal, refferal
         }
 
+        console.log(payload)
+
         const {quota} = await Ticket.findOne({_id:ticket_id}, {quota:1})
 
         if(quota >= quantity){
@@ -257,7 +259,7 @@ const add_order = async (req, res) => {
                 item_details: [
                     {
                         id: ticket_id,
-                        name: `${ticket_name} Ticket`,
+                        name: `${ticket_type} Ticket`,
                         price: total_price,
                         quantity: 1,
                         user: user_id
@@ -274,6 +276,8 @@ const add_order = async (req, res) => {
                     refferal_code: refferal
                 }
             }
+
+            console.log(midtrans_payload)
 
             snapMidtrans.createTransaction(midtrans_payload).then(async (midtrans_response) => {
                 await Order.updateOne({ _id: data._id },
@@ -374,7 +378,7 @@ const update_order = async (req, res) => {
 const delete_order = async (req, res) => {
     const { order_id } = req.params
     try {
-        const data = await Partner.deleteOne({ _id: order_id })
+        const data = await Order.deleteOne({ _id: order_id })
 
         if (!data.deletedCount) {
             return res.status(403).json({
