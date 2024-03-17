@@ -64,7 +64,7 @@ const check_order = async (req, res) => {
                 return res.status(200).json({
                     status: 200,
                     message: "Guest is Attended",
-                    data
+                    data: order
                 })
             } else {
                 return res.status(203).json({
